@@ -40,8 +40,8 @@ export class PikachuVolleyball {
     this.audio = new PikaAudio(resources);
     this.physics = new PikaPhysics(true, true);
     this.keyboardArray = [
-      new PikaKeyboard('wasd'), // for player1
-      new PikaKeyboard('arrows'), // for player2
+      new PikaKeyboard('arrows'),
+      new PikaKeyboard('arrows'),
     ];
 
     /** @type {number} game fps */
@@ -56,8 +56,8 @@ export class PikachuVolleyball {
     /** @type {number} number of elapsed normal fps frames for rendering slow motion */
     this.slowMotionNumOfSkippedFrames = 0;
 
-    /** @type {number} 0: with computer, 1: with friend */
-    this.selectedWithWho = 0;
+    /** @type {number} 0: play as left (P1), 1: play as right (P2) */
+    this.selectedSide = 0;
 
     /** @type {number[]} [0] for player 1 score, [1] for player 2 score */
     this.scores = [0, 0];
@@ -163,15 +163,15 @@ export class PikachuVolleyball {
   }
 
   /**
-   * Menu: select who do you want to play. With computer? With friend?
+   * Menu: select which side to play (left P1 or right P2)
    * @type {GameState}
    */
   menu() {
     if (this.frameCounter === 0) {
       this.view.menu.visible = true;
       this.view.fadeInOut.setBlackAlphaTo(0);
-      this.selectedWithWho = 0;
-      this.view.menu.selectWithWho(this.selectedWithWho);
+      this.selectedSide = 0;
+      this.view.menu.selectWithWho(this.selectedSide);
     }
     this.view.menu.drawFightMessage(this.frameCounter);
     this.view.menu.drawSachisoft(this.frameCounter);
@@ -197,20 +197,20 @@ export class PikachuVolleyball {
     if (
       (this.keyboardArray[0].yDirection === -1 ||
         this.keyboardArray[1].yDirection === -1) &&
-      this.selectedWithWho === 1
+      this.selectedSide === 1
     ) {
       this.noInputFrameCounter = 0;
-      this.selectedWithWho = 0;
-      this.view.menu.selectWithWho(this.selectedWithWho);
+      this.selectedSide = 0;
+      this.view.menu.selectWithWho(this.selectedSide);
       this.audio.sounds.pi.play();
     } else if (
       (this.keyboardArray[0].yDirection === 1 ||
         this.keyboardArray[1].yDirection === 1) &&
-      this.selectedWithWho === 0
+      this.selectedSide === 0
     ) {
       this.noInputFrameCounter = 0;
-      this.selectedWithWho = 1;
-      this.view.menu.selectWithWho(this.selectedWithWho);
+      this.selectedSide = 1;
+      this.view.menu.selectWithWho(this.selectedSide);
       this.audio.sounds.pi.play();
     } else {
       this.noInputFrameCounter++;
@@ -220,19 +220,19 @@ export class PikachuVolleyball {
       this.keyboardArray[0].powerHit === 1 ||
       this.keyboardArray[1].powerHit === 1
     ) {
-      if (this.selectedWithWho === 1) {
-        // 2-player mode
+      if (this.selectedSide === 0) {
+        // Play as Left (P1)
         this.physics.player1.isComputer = false;
-        this.physics.player2.isComputer = false;
-        this.audio.sounds.pikachu.play();
-        this.frameCounter = 0;
-        this.noInputFrameCounter = 0;
-        this.state = this.afterMenuSelection;
+        this.physics.player2.isComputer = true;
       } else {
-        // 1-player mode: show side selection UI
-        this.paused = true;
-        this._showSideSelect();
+        // Play as Right (P2)
+        this.physics.player1.isComputer = true;
+        this.physics.player2.isComputer = false;
       }
+      this.audio.sounds.pikachu.play();
+      this.frameCounter = 0;
+      this.noInputFrameCounter = 0;
+      this.state = this.afterMenuSelection;
       return;
     }
 
@@ -505,46 +505,6 @@ export class PikachuVolleyball {
     this.view.menu.visible = false;
     this.view.game.visible = false;
     this.state = this.intro;
-  }
-
-  /**
-   * Show the side selection overlay for 1-player mode
-   */
-  _showSideSelect() {
-    const box = document.getElementById('side-select-box');
-    const leftBtn = document.getElementById('side-left-btn');
-    const rightBtn = document.getElementById('side-right-btn');
-    box.classList.remove('hidden');
-
-    const onSelect = (playAsP1) => {
-      box.classList.add('hidden');
-      leftBtn.removeEventListener('click', onLeft);
-      rightBtn.removeEventListener('click', onRight);
-      this._onSideSelected(playAsP1);
-    };
-    const onLeft = () => onSelect(true);
-    const onRight = () => onSelect(false);
-    leftBtn.addEventListener('click', onLeft);
-    rightBtn.addEventListener('click', onRight);
-  }
-
-  /**
-   * Called after the player selects a side in 1-player mode
-   * @param {boolean} playAsP1 true if the player chose left (P1)
-   */
-  _onSideSelected(playAsP1) {
-    if (playAsP1) {
-      this.physics.player1.isComputer = false;
-      this.physics.player2.isComputer = true;
-    } else {
-      this.physics.player1.isComputer = true;
-      this.physics.player2.isComputer = false;
-    }
-    this.audio.sounds.pikachu.play();
-    this.frameCounter = 0;
-    this.noInputFrameCounter = 0;
-    this.paused = false;
-    this.state = this.afterMenuSelection;
   }
 
   /** @return {boolean} */

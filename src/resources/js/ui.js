@@ -7,7 +7,7 @@ import { localStorageWrapper } from './utils/local_storage_wrapper.js';
 
 /** @typedef {import('./pikavolley.js').PikachuVolleyball} PikachuVolleyball */
 /** @typedef {import('@pixi/ticker').Ticker} Ticker */
-/** @typedef {{graphic?: string, bgm?: string, sfx?: string, speed?: string, winningScore?: string, p1Keys?: string, p2Keys?: string}} Options */
+/** @typedef {{graphic?: string, bgm?: string, sfx?: string, speed?: string, winningScore?: string, keymap?: string}} Options */
 
 /**
  * Enum for "game paused by what?".
@@ -120,11 +120,9 @@ export function setUpUI(pikaVolley, ticker) {
         pikaVolley.winningScore = 15;
         break;
     }
-    if (options.p1Keys) {
-      pikaVolley.keyboardArray[0].switchPreset(options.p1Keys);
-    }
-    if (options.p2Keys) {
-      pikaVolley.keyboardArray[1].switchPreset(options.p2Keys);
+    if (options.keymap) {
+      pikaVolley.keyboardArray[0].switchPreset(options.keymap);
+      pikaVolley.keyboardArray[1].switchPreset(options.keymap);
     }
   };
 
@@ -149,11 +147,8 @@ export function setUpUI(pikaVolley, ticker) {
     if (options.winningScore) {
       localStorageWrapper.set('pv-offline-winningScore', options.winningScore);
     }
-    if (options.p1Keys) {
-      localStorageWrapper.set('pv-offline-p1Keys', options.p1Keys);
-    }
-    if (options.p2Keys) {
-      localStorageWrapper.set('pv-offline-p2Keys', options.p2Keys);
+    if (options.keymap) {
+      localStorageWrapper.set('pv-offline-keymap', options.keymap);
     }
   };
 
@@ -167,8 +162,7 @@ export function setUpUI(pikaVolley, ticker) {
     sfx: localStorageWrapper.get('pv-offline-sfx'),
     speed: localStorageWrapper.get('pv-offline-speed'),
     winningScore: localStorageWrapper.get('pv-offline-winningScore'),
-    p1Keys: localStorageWrapper.get('pv-offline-p1Keys'),
-    p2Keys: localStorageWrapper.get('pv-offline-p2Keys'),
+    keymap: localStorageWrapper.get('pv-offline-keymap'),
   });
 
   /**
@@ -446,27 +440,15 @@ function setUpBtns(pikaVolley, applyAndSaveOptions) {
     pikaVolley.isPracticeMode = false;
   });
 
-  // P1 key preset buttons
-  const p1KeysBtns = {
-    wasd: document.getElementById('p1-keys-wasd-btn'),
-    original: document.getElementById('p1-keys-original-btn'),
-    arrows: document.getElementById('p1-keys-arrows-btn'),
+  // Keymap preset buttons
+  const keymapBtns = {
+    arrows: document.getElementById('keymap-arrows-btn'),
+    wasd: document.getElementById('keymap-wasd-btn'),
+    original: document.getElementById('keymap-original-btn'),
   };
-  for (const [preset, btn] of Object.entries(p1KeysBtns)) {
+  for (const [preset, btn] of Object.entries(keymapBtns)) {
     btn.addEventListener('click', () => {
-      applyAndSaveOptions({ p1Keys: preset });
-    });
-  }
-
-  // P2 key preset buttons
-  const p2KeysBtns = {
-    arrows: document.getElementById('p2-keys-arrows-btn'),
-    wasd: document.getElementById('p2-keys-wasd-btn'),
-    original: document.getElementById('p2-keys-original-btn'),
-  };
-  for (const [preset, btn] of Object.entries(p2KeysBtns)) {
-    btn.addEventListener('click', () => {
-      applyAndSaveOptions({ p2Keys: preset });
+      applyAndSaveOptions({ keymap: preset });
     });
   }
 
@@ -512,8 +494,7 @@ function setUpBtns(pikaVolley, applyAndSaveOptions) {
       sfx: 'stereo',
       speed: 'medium',
       winningScore: '15',
-      p1Keys: 'wasd',
-      p2Keys: 'arrows',
+      keymap: 'arrows',
     };
     applyAndSaveOptions(defaultOptions);
   });
@@ -618,24 +599,14 @@ function setSelectedOptionsBtn(options) {
         break;
     }
   }
-  if (options.p1Keys) {
+  if (options.keymap) {
     const btns = {
-      wasd: document.getElementById('p1-keys-wasd-btn'),
-      original: document.getElementById('p1-keys-original-btn'),
-      arrows: document.getElementById('p1-keys-arrows-btn'),
+      arrows: document.getElementById('keymap-arrows-btn'),
+      wasd: document.getElementById('keymap-wasd-btn'),
+      original: document.getElementById('keymap-original-btn'),
     };
     for (const [key, btn] of Object.entries(btns)) {
-      btn.classList.toggle('selected', key === options.p1Keys);
-    }
-  }
-  if (options.p2Keys) {
-    const btns = {
-      arrows: document.getElementById('p2-keys-arrows-btn'),
-      wasd: document.getElementById('p2-keys-wasd-btn'),
-      original: document.getElementById('p2-keys-original-btn'),
-    };
-    for (const [key, btn] of Object.entries(btns)) {
-      btn.classList.toggle('selected', key === options.p2Keys);
+      btn.classList.toggle('selected', key === options.keymap);
     }
   }
 }
@@ -697,14 +668,9 @@ function setUpToShowDropdownsAndSubmenus(pikaVolley) {
       showSubmenu('practice-mode-submenu-btn', 'practice-mode-submenu');
     });
   document
-    .getElementById('p1-keys-submenu-btn')
+    .getElementById('keymap-submenu-btn')
     .addEventListener('mouseover', () => {
-      showSubmenu('p1-keys-submenu-btn', 'p1-keys-submenu');
-    });
-  document
-    .getElementById('p2-keys-submenu-btn')
-    .addEventListener('mouseover', () => {
-      showSubmenu('p2-keys-submenu-btn', 'p2-keys-submenu');
+      showSubmenu('keymap-submenu-btn', 'keymap-submenu');
     });
   document
     .getElementById('reset-to-default-btn')
@@ -734,14 +700,9 @@ function setUpToShowDropdownsAndSubmenus(pikaVolley) {
       showSubmenu('practice-mode-submenu-btn', 'practice-mode-submenu');
     });
   document
-    .getElementById('p1-keys-submenu-btn')
+    .getElementById('keymap-submenu-btn')
     .addEventListener('click', () => {
-      showSubmenu('p1-keys-submenu-btn', 'p1-keys-submenu');
-    });
-  document
-    .getElementById('p2-keys-submenu-btn')
-    .addEventListener('click', () => {
-      showSubmenu('p2-keys-submenu-btn', 'p2-keys-submenu');
+      showSubmenu('keymap-submenu-btn', 'keymap-submenu');
     });
   document
     .getElementById('reset-to-default-btn')

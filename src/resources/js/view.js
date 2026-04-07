@@ -8,12 +8,12 @@
 'use strict';
 import { AnimatedSprite } from '@pixi/sprite-animated';
 import { Sprite } from '@pixi/sprite';
+import { Texture } from '@pixi/core';
 import { Container } from '@pixi/display';
 import { Cloud, Wave, cloudAndWaveEngine } from './cloud_and_wave.js';
 import { ASSETS_PATH } from './assets_path.js';
 
 /** @typedef {import('@pixi/loaders').LoaderResource} LoaderResource */
-/** @typedef {import('@pixi/core').Texture} Texture */
 
 const TEXTURES = ASSETS_PATH.TEXTURES;
 
@@ -87,8 +87,8 @@ export class MenuView {
         0,
       ),
       withWho: [
-        makeSpriteWithAnchorXY(textures, TEXTURES.WITH_COMPUTER, 0, 0),
-        makeSpriteWithAnchorXY(textures, TEXTURES.WITH_FRIEND, 0, 0),
+        new Sprite(makeTextTexture('Play as Left')),
+        new Sprite(makeTextTexture('Play as Right')),
       ],
       sachisoft: makeSpriteWithAnchorXY(textures, TEXTURES.SACHISOFT, 0, 0),
       fight: makeSpriteWithAnchorXY(textures, TEXTURES.FIGHT, 0, 0),
@@ -1005,4 +1005,25 @@ function getFrameNumberForPlayerAnimatedSprite(state, frameNumber) {
   } else if (state > 4) {
     return 18 + 5 * (state - 5) + frameNumber;
   }
+}
+
+/**
+ * Create a PixiJS Texture from canvas-rendered text.
+ * Used for menu labels that replace the original Japanese sprite text.
+ * @param {string} text
+ * @param {number} [width=120]
+ * @param {number} [height=20]
+ * @return {Texture}
+ */
+function makeTextTexture(text, width = 120, height = 20) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${height - 4}px Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, width / 2, height / 2);
+  return Texture.from(canvas);
 }

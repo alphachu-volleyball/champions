@@ -178,47 +178,23 @@
               <div class="relative-container">
                 <button
                   type="button"
-                  id="p1-keys-submenu-btn"
+                  id="keymap-submenu-btn"
                   class="btn submenu-btn"
                 >
-                  P1 Keys &#9654;&#xfe0e;
+                  Keymap &#9654;&#xfe0e;
                 </button>
-                <div id="p1-keys-submenu" class="submenu">
+                <div id="keymap-submenu" class="submenu">
                   <button
                     type="button"
-                    id="p1-keys-wasd-btn"
-                    class="btn selected"
-                  >
-                    <span class="check">&check; </span>WASD + Enter
-                  </button>
-                  <button type="button" id="p1-keys-original-btn" class="btn">
-                    <span class="check">&check; </span>Original (DGRV+Z)
-                  </button>
-                  <button type="button" id="p1-keys-arrows-btn" class="btn">
-                    <span class="check">&check; </span>Arrows + Space
-                  </button>
-                </div>
-              </div>
-              <div class="relative-container">
-                <button
-                  type="button"
-                  id="p2-keys-submenu-btn"
-                  class="btn submenu-btn"
-                >
-                  P2 Keys &#9654;&#xfe0e;
-                </button>
-                <div id="p2-keys-submenu" class="submenu">
-                  <button
-                    type="button"
-                    id="p2-keys-arrows-btn"
+                    id="keymap-arrows-btn"
                     class="btn selected"
                   >
                     <span class="check">&check; </span>Arrows + Space
                   </button>
-                  <button type="button" id="p2-keys-wasd-btn" class="btn">
+                  <button type="button" id="keymap-wasd-btn" class="btn">
                     <span class="check">&check; </span>WASD + Enter
                   </button>
-                  <button type="button" id="p2-keys-original-btn" class="btn">
+                  <button type="button" id="keymap-original-btn" class="btn">
                     <span class="check">&check; </span>Original (DGRV+Z)
                   </button>
                 </div>
@@ -275,10 +251,9 @@
           <div class="margin-top limit-width">
             <p>
               <span class="thick">Controls (default):</span><br />
-              Player 1: WASD + Enter<br />
-              Player 2: Arrow keys + Space<br />
+              Arrow keys + Space<br />
               <span style="font-size: 0.85em"
-                >Change key bindings in Options &rarr; P1/P2 Keys</span
+                >Change in Options &rarr; Keymap</span
               >
             </p>
             <div class="margin-top">
@@ -315,22 +290,6 @@
           <button type="button" id="notice-ok-btn-2" class="btn-in-box">
             OK
           </button>
-        </div>
-        <div class="fade-in-box notice hidden" id="side-select-box">
-          <p><span class="thick">Choose your side</span></p>
-          <div>
-            <button type="button" id="side-left-btn" class="btn-in-box">
-              Left (P1)
-            </button>
-            <button
-              type="button"
-              id="side-right-btn"
-              class="btn-in-box"
-              style="margin-top: 8px"
-            >
-              Right (P2)
-            </button>
-          </div>
         </div>
         <div class="fade-in-box loading hidden" id="loading-box">
           <div>
