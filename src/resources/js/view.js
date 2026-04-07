@@ -798,22 +798,31 @@ function makeBGContainer(textures) {
  * @return {AnimatedSprite[]} [0] for player 1, [1] for player2
  */
 function makePlayerAnimatedSprites(textures) {
-  const getPlayerTexture = (i, j) => textures[TEXTURES.PIKACHU(i, j)];
-  const playerTextureArray = [];
-  for (let i = 0; i < 7; i++) {
-    if (i === 3) {
-      playerTextureArray.push(getPlayerTexture(i, 0));
-      playerTextureArray.push(getPlayerTexture(i, 1));
-    } else if (i === 4) {
-      playerTextureArray.push(getPlayerTexture(i, 0));
-    } else {
-      for (let j = 0; j < 5; j++) {
-        playerTextureArray.push(getPlayerTexture(i, j));
+  function buildTextureArray(textureFn) {
+    const arr = [];
+    for (let i = 0; i < 7; i++) {
+      if (i === 3) {
+        arr.push(textureFn(i, 0));
+        arr.push(textureFn(i, 1));
+      } else if (i === 4) {
+        arr.push(textureFn(i, 0));
+      } else {
+        for (let j = 0; j < 5; j++) {
+          arr.push(textureFn(i, j));
+        }
       }
     }
+    return arr;
   }
-  const player1AnimatedSprite = new AnimatedSprite(playerTextureArray, false);
-  const player2AnimatedSprite = new AnimatedSprite(playerTextureArray, false);
+
+  const player1TextureArray = buildTextureArray(
+    (i, j) => textures[TEXTURES.PIKACHU_WHITE(i, j)]
+  );
+  const player2TextureArray = buildTextureArray(
+    (i, j) => textures[TEXTURES.PIKACHU(i, j)]
+  );
+  const player1AnimatedSprite = new AnimatedSprite(player1TextureArray, false);
+  const player2AnimatedSprite = new AnimatedSprite(player2TextureArray, false);
 
   player1AnimatedSprite.anchor.x = 0.5;
   player1AnimatedSprite.anchor.y = 0.5;
