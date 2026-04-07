@@ -221,21 +221,18 @@ export class PikachuVolleyball {
       this.keyboardArray[1].powerHit === 1
     ) {
       if (this.selectedWithWho === 1) {
+        // 2-player mode
         this.physics.player1.isComputer = false;
         this.physics.player2.isComputer = false;
+        this.audio.sounds.pikachu.play();
+        this.frameCounter = 0;
+        this.noInputFrameCounter = 0;
+        this.state = this.afterMenuSelection;
       } else {
-        if (this.keyboardArray[0].powerHit === 1) {
-          this.physics.player1.isComputer = false;
-          this.physics.player2.isComputer = true;
-        } else if (this.keyboardArray[1].powerHit === 1) {
-          this.physics.player1.isComputer = true;
-          this.physics.player2.isComputer = false;
-        }
+        // 1-player mode: show side selection UI
+        this.paused = true;
+        this._showSideSelect();
       }
-      this.audio.sounds.pikachu.play();
-      this.frameCounter = 0;
-      this.noInputFrameCounter = 0;
-      this.state = this.afterMenuSelection;
       return;
     }
 
@@ -503,6 +500,46 @@ export class PikachuVolleyball {
     this.view.menu.visible = false;
     this.view.game.visible = false;
     this.state = this.intro;
+  }
+
+  /**
+   * Show the side selection overlay for 1-player mode
+   */
+  _showSideSelect() {
+    const box = document.getElementById('side-select-box');
+    const leftBtn = document.getElementById('side-left-btn');
+    const rightBtn = document.getElementById('side-right-btn');
+    box.classList.remove('hidden');
+
+    const onSelect = (playAsP1) => {
+      box.classList.add('hidden');
+      leftBtn.removeEventListener('click', onLeft);
+      rightBtn.removeEventListener('click', onRight);
+      this._onSideSelected(playAsP1);
+    };
+    const onLeft = () => onSelect(true);
+    const onRight = () => onSelect(false);
+    leftBtn.addEventListener('click', onLeft);
+    rightBtn.addEventListener('click', onRight);
+  }
+
+  /**
+   * Called after the player selects a side in 1-player mode
+   * @param {boolean} playAsP1 true if the player chose left (P1)
+   */
+  _onSideSelected(playAsP1) {
+    if (playAsP1) {
+      this.physics.player1.isComputer = false;
+      this.physics.player2.isComputer = true;
+    } else {
+      this.physics.player1.isComputer = true;
+      this.physics.player2.isComputer = false;
+    }
+    this.audio.sounds.pikachu.play();
+    this.frameCounter = 0;
+    this.noInputFrameCounter = 0;
+    this.paused = false;
+    this.state = this.afterMenuSelection;
   }
 
   /** @return {boolean} */
