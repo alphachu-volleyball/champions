@@ -286,6 +286,11 @@ export class PikachuVolleyball {
       this.physics.player2.gameEnded = false;
       this.physics.player2.isWinner = false;
 
+      this.view.game.setPlayerSkins(
+        this.physics.player1.isComputer,
+        this.physics.player2.isComputer,
+      );
+
       this.scores[0] = 0;
       this.scores[1] = 0;
       this.view.game.drawScoresToScoreBoards(this.scores);

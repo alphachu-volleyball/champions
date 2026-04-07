@@ -336,9 +336,11 @@ export class GameView {
 
     // Display objects below
     this.bgContainer = makeBGContainer(textures);
-    const playerSprites = makePlayerAnimatedSprites(textures);
-    this.player1 = playerSprites[0];
-    this.player2 = playerSprites[1];
+    const playerData = makePlayerAnimatedSprites(textures);
+    this.player1 = playerData.sprites[0];
+    this.player2 = playerData.sprites[1];
+    this._yellowTextures = playerData.yellowTextures;
+    this._whiteTextures = playerData.whiteTextures;
     this.ball = makeBallAnimatedSprites(textures);
     this.ballHyper = makeSpriteWithAnchorXY(
       textures,
@@ -452,6 +454,21 @@ export class GameView {
     for (const prop in this.messages) {
       this.messages[prop].visible = false;
     }
+  }
+
+  /**
+   * Set player skins based on which player is computer.
+   * Computer gets white pikachu, human gets yellow.
+   * @param {boolean} isPlayer1Computer
+   * @param {boolean} isPlayer2Computer
+   */
+  setPlayerSkins(isPlayer1Computer, isPlayer2Computer) {
+    this.player1.textures = isPlayer1Computer
+      ? this._whiteTextures
+      : this._yellowTextures;
+    this.player2.textures = isPlayer2Computer
+      ? this._whiteTextures
+      : this._yellowTextures;
   }
 
   /** @typedef {import("./physics").PikaPhysics} PikaPhysics */
@@ -797,39 +814,55 @@ function makeBGContainer(textures) {
  * @param {Object.<string,Texture>} textures
  * @return {AnimatedSprite[]} [0] for player 1, [1] for player2
  */
-function makePlayerAnimatedSprites(textures) {
-  function buildTextureArray(textureFn) {
-    const arr = [];
-    for (let i = 0; i < 7; i++) {
-      if (i === 3) {
-        arr.push(textureFn(i, 0));
-        arr.push(textureFn(i, 1));
-      } else if (i === 4) {
-        arr.push(textureFn(i, 0));
-      } else {
-        for (let j = 0; j < 5; j++) {
-          arr.push(textureFn(i, j));
-        }
+/**
+ * Build a texture array for a pikachu color variant
+ * @param {Object.<string,Texture>} textures
+ * @param {function(number,number):string} textureFn
+ * @return {Texture[]}
+ */
+function buildPlayerTextureArray(textures, textureFn) {
+  const arr = [];
+  for (let i = 0; i < 7; i++) {
+    if (i === 3) {
+      arr.push(textures[textureFn(i, 0)]);
+      arr.push(textures[textureFn(i, 1)]);
+    } else if (i === 4) {
+      arr.push(textures[textureFn(i, 0)]);
+    } else {
+      for (let j = 0; j < 5; j++) {
+        arr.push(textures[textureFn(i, j)]);
       }
     }
-    return arr;
   }
+  return arr;
+}
 
-  const player1TextureArray = buildTextureArray(
-    (i, j) => textures[TEXTURES.PIKACHU_WHITE(i, j)],
+/**
+ * Make animated sprites for both players
+ * @param {Object.<string,Texture>} textures
+ * @return {{sprites: AnimatedSprite[], yellowTextures: Texture[], whiteTextures: Texture[]}}
+ */
+function makePlayerAnimatedSprites(textures) {
+  const yellowTextures = buildPlayerTextureArray(textures, TEXTURES.PIKACHU);
+  const whiteTextures = buildPlayerTextureArray(
+    textures,
+    TEXTURES.PIKACHU_WHITE,
   );
-  const player2TextureArray = buildTextureArray(
-    (i, j) => textures[TEXTURES.PIKACHU(i, j)],
-  );
-  const player1AnimatedSprite = new AnimatedSprite(player1TextureArray, false);
-  const player2AnimatedSprite = new AnimatedSprite(player2TextureArray, false);
+
+  // Both start with yellow; swapped at game start based on who is computer
+  const player1AnimatedSprite = new AnimatedSprite(yellowTextures, false);
+  const player2AnimatedSprite = new AnimatedSprite(yellowTextures, false);
 
   player1AnimatedSprite.anchor.x = 0.5;
   player1AnimatedSprite.anchor.y = 0.5;
   player2AnimatedSprite.anchor.x = 0.5;
   player2AnimatedSprite.anchor.y = 0.5;
 
-  return [player1AnimatedSprite, player2AnimatedSprite];
+  return {
+    sprites: [player1AnimatedSprite, player2AnimatedSprite],
+    yellowTextures,
+    whiteTextures,
+  };
 }
 
 /**
