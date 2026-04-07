@@ -100,6 +100,11 @@ export class PikachuVolleyball {
     /** @type {boolean} true: practice mode on, false: practice mode off */
     this._isPracticeMode = false;
 
+    /** @type {string} human player nickname */
+    this.nickname = 'Player';
+    /** @type {string} AI model name */
+    this.modelName = 'AI';
+
     /**
      * The game state which is being rendered now
      * @type {GameState}
@@ -142,6 +147,7 @@ export class PikachuVolleyball {
       this.view.intro.visible = true;
       this.view.fadeInOut.setBlackAlphaTo(0);
       this.audio.sounds.bgm.stop();
+      document.getElementById('nicknames-container').classList.add('hidden');
     }
     this.view.intro.drawMark(this.frameCounter);
     this.frameCounter++;
@@ -290,6 +296,7 @@ export class PikachuVolleyball {
         this.physics.player1.isComputer,
         this.physics.player2.isComputer,
       );
+      this._updateNicknameDisplay();
 
       this.scores[0] = 0;
       this.scores[1] = 0;
@@ -504,7 +511,23 @@ export class PikachuVolleyball {
     this.slowMotionNumOfSkippedFrames = 0;
     this.view.menu.visible = false;
     this.view.game.visible = false;
+    document.getElementById('nicknames-container').classList.add('hidden');
     this.state = this.intro;
+  }
+
+  /**
+   * Update the nickname display overlay based on current player sides
+   */
+  _updateNicknameDisplay() {
+    const p1Name = this.physics.player1.isComputer
+      ? this.modelName
+      : this.nickname;
+    const p2Name = this.physics.player2.isComputer
+      ? this.modelName
+      : this.nickname;
+    document.getElementById('player1-nickname').textContent = p1Name;
+    document.getElementById('player2-nickname').textContent = p2Name;
+    document.getElementById('nicknames-container').classList.remove('hidden');
   }
 
   /** @return {boolean} */

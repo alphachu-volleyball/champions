@@ -220,6 +220,46 @@ span.check {
 #game-canvas-container {
   position: relative;
 }
+.nicknames-container {
+  position: absolute;
+  top: calc(var(--canvas-height) * 42 / 304);
+  left: 0;
+  width: var(--canvas-width);
+  display: flex;
+  justify-content: space-between;
+  z-index: 9;
+  pointer-events: none;
+}
+.nicknames-container.hidden {
+  display: none;
+}
+.nickname {
+  color: #000000;
+  font-family: monospace;
+  font-size: calc(var(--canvas-height) * 14 / 304);
+  font-weight: bold;
+}
+.nickname.left {
+  margin-left: calc(var(--canvas-width) * 14 / 432);
+}
+.nickname.right {
+  margin-right: calc(var(--canvas-width) * 14 / 432);
+}
+.nickname-input-container {
+  margin-top: calc(var(--font-size));
+  text-align: center;
+}
+#nickname-input {
+  width: 50%;
+  max-width: 200px;
+  height: calc(1.5 * var(--font-size));
+  font-size: var(--font-size);
+  text-align: center;
+  border: 2px solid var(--btn-background-color);
+  border-radius: 5px;
+  background-color: var(--background-color);
+  color: var(--color);
+}
 #game-canvas {
   display: block;
   margin-left: auto;

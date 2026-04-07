@@ -177,6 +177,19 @@ export function setUpUI(pikaVolley, ticker) {
   // Load and apply saved options
   applyOptions(loadOptions());
 
+  // Nickname input
+  const nicknameInput = document.getElementById('nickname-input');
+  const savedNickname = localStorageWrapper.get('pv-offline-nickname');
+  if (savedNickname) {
+    nicknameInput.value = savedNickname;
+    pikaVolley.nickname = savedNickname;
+  }
+  nicknameInput.addEventListener('input', () => {
+    const value = nicknameInput.value.trim().slice(0, 8);
+    pikaVolley.nickname = value || 'Player';
+    localStorageWrapper.set('pv-offline-nickname', pikaVolley.nickname);
+  });
+
   setUpBtns(pikaVolley, applyAndSaveOptions);
   setUpToShowDropdownsAndSubmenus(pikaVolley);
 

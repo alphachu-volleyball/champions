@@ -213,6 +213,14 @@
         </div>
       </div>
       <div id="game-canvas-container">
+        <div class="nicknames-container hidden" id="nicknames-container">
+          <div class="nickname left">
+            <span id="player1-nickname"></span>
+          </div>
+          <div class="nickname right">
+            <span id="player2-nickname"></span>
+          </div>
+        </div>
         <div class="fade-in-box about" id="about-box">
           <div id="about-box-head">
             <h1>Pikachu Volleyball</h1>
@@ -256,6 +264,20 @@
                 >Change in Options &rarr; Keymap</span
               >
             </p>
+            <div class="nickname-input-container">
+              <label for="nickname-input"
+                >Nickname (maximum 8 characters)</label
+              >
+              <input
+                type="text"
+                id="nickname-input"
+                maxlength="8"
+                autocapitalize="none"
+                autocomplete="off"
+                autocorrect="off"
+                value="Player"
+              />
+            </div>
             <div class="margin-top">
               <button
                 type="button"
