@@ -200,41 +200,16 @@ export class PikachuVolleyball {
       return;
     }
 
-    if (
-      (this.keyboardArray[0].yDirection === -1 ||
-        this.keyboardArray[1].yDirection === -1) &&
-      this.selectedSide === 1
-    ) {
-      this.noInputFrameCounter = 0;
-      this.selectedSide = 0;
-      this.view.menu.selectWithWho(this.selectedSide);
-      this.audio.sounds.pi.play();
-    } else if (
-      (this.keyboardArray[0].yDirection === 1 ||
-        this.keyboardArray[1].yDirection === 1) &&
-      this.selectedSide === 0
-    ) {
-      this.noInputFrameCounter = 0;
-      this.selectedSide = 1;
-      this.view.menu.selectWithWho(this.selectedSide);
-      this.audio.sounds.pi.play();
-    } else {
-      this.noInputFrameCounter++;
-    }
+    // selectedSide is locked to 0 (Play as Right); Play as Left is disabled
+    this.noInputFrameCounter++;
 
     if (
       this.keyboardArray[0].powerHit === 1 ||
       this.keyboardArray[1].powerHit === 1
     ) {
-      if (this.selectedSide === 0) {
-        // Play as Left (P1)
-        this.physics.player1.isComputer = false;
-        this.physics.player2.isComputer = true;
-      } else {
-        // Play as Right (P2)
-        this.physics.player1.isComputer = true;
-        this.physics.player2.isComputer = false;
-      }
+      // Play as Right (P2) — only option
+      this.physics.player1.isComputer = true;
+      this.physics.player2.isComputer = false;
       this.audio.sounds.pikachu.play();
       this.frameCounter = 0;
       this.noInputFrameCounter = 0;

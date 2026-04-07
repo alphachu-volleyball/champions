@@ -87,8 +87,8 @@ export class MenuView {
         0,
       ),
       withWho: [
-        new Sprite(makeTextTexture('Play as Left')),
         new Sprite(makeTextTexture('Play as Right')),
+        new Sprite(makeTextTexture('Play as Left', 120, 20, '#888888')),
       ],
       sachisoft: makeSpriteWithAnchorXY(textures, TEXTURES.SACHISOFT, 0, 0),
       fight: makeSpriteWithAnchorXY(textures, TEXTURES.FIGHT, 0, 0),
@@ -1013,14 +1013,15 @@ function getFrameNumberForPlayerAnimatedSprite(state, frameNumber) {
  * @param {string} text
  * @param {number} [width=120]
  * @param {number} [height=20]
+ * @param {string} [color='#ffffff']
  * @return {Texture}
  */
-function makeTextTexture(text, width = 120, height = 20) {
+function makeTextTexture(text, width = 120, height = 20, color = '#ffffff') {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = color;
   ctx.font = `bold ${height - 4}px Arial, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
