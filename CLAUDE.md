@@ -104,3 +104,9 @@ Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`
 - ONNX models are fetched from training-center GitHub Releases
 - Models are loaded at runtime via ONNX Runtime Web
 - Models are NOT committed to Git
+
+## Future: Game Data Collection
+
+- Collect human-vs-AI game records (summary, round stats, frame logs) for model improvement
+- Firebase Firestore (summaries) + Cloud Storage (frame logs) via client-side JS SDK
+- training-center consumes the data via Python Firebase Admin SDK for analysis and retraining
