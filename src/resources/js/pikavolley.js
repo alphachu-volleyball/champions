@@ -40,14 +40,8 @@ export class PikachuVolleyball {
     this.audio = new PikaAudio(resources);
     this.physics = new PikaPhysics(true, true);
     this.keyboardArray = [
-      new PikaKeyboard('KeyD', 'KeyG', 'KeyR', 'KeyV', 'KeyZ', 'KeyF'), // for player1
-      new PikaKeyboard( // for player2
-        'ArrowLeft',
-        'ArrowRight',
-        'ArrowUp',
-        'ArrowDown',
-        'Enter',
-      ),
+      new PikaKeyboard('arrows'),
+      new PikaKeyboard('arrows'),
     ];
 
     /** @type {number} game fps */
@@ -62,8 +56,8 @@ export class PikachuVolleyball {
     /** @type {number} number of elapsed normal fps frames for rendering slow motion */
     this.slowMotionNumOfSkippedFrames = 0;
 
-    /** @type {number} 0: with computer, 1: with friend */
-    this.selectedWithWho = 0;
+    /** @type {number} 0: play as left (P1), 1: play as right (P2) */
+    this.selectedSide = 0;
 
     /** @type {number[]} [0] for player 1 score, [1] for player 2 score */
     this.scores = [0, 0];
@@ -105,6 +99,11 @@ export class PikachuVolleyball {
 
     /** @type {boolean} true: practice mode on, false: practice mode off */
     this._isPracticeMode = false;
+
+    /** @type {string} human player nickname */
+    this.nickname = 'Player';
+    /** @type {string} AI model name */
+    this.modelName = 'AI';
 
     /**
      * The game state which is being rendered now
@@ -148,6 +147,7 @@ export class PikachuVolleyball {
       this.view.intro.visible = true;
       this.view.fadeInOut.setBlackAlphaTo(0);
       this.audio.sounds.bgm.stop();
+      document.getElementById('nicknames-container').classList.add('hidden');
     }
     this.view.intro.drawMark(this.frameCounter);
     this.frameCounter++;
@@ -169,15 +169,15 @@ export class PikachuVolleyball {
   }
 
   /**
-   * Menu: select who do you want to play. With computer? With friend?
+   * Menu: select which side to play (left P1 or right P2)
    * @type {GameState}
    */
   menu() {
     if (this.frameCounter === 0) {
       this.view.menu.visible = true;
       this.view.fadeInOut.setBlackAlphaTo(0);
-      this.selectedWithWho = 0;
-      this.view.menu.selectWithWho(this.selectedWithWho);
+      this.selectedSide = 0;
+      this.view.menu.selectWithWho(this.selectedSide);
     }
     this.view.menu.drawFightMessage(this.frameCounter);
     this.view.menu.drawSachisoft(this.frameCounter);
@@ -200,44 +200,16 @@ export class PikachuVolleyball {
       return;
     }
 
-    if (
-      (this.keyboardArray[0].yDirection === -1 ||
-        this.keyboardArray[1].yDirection === -1) &&
-      this.selectedWithWho === 1
-    ) {
-      this.noInputFrameCounter = 0;
-      this.selectedWithWho = 0;
-      this.view.menu.selectWithWho(this.selectedWithWho);
-      this.audio.sounds.pi.play();
-    } else if (
-      (this.keyboardArray[0].yDirection === 1 ||
-        this.keyboardArray[1].yDirection === 1) &&
-      this.selectedWithWho === 0
-    ) {
-      this.noInputFrameCounter = 0;
-      this.selectedWithWho = 1;
-      this.view.menu.selectWithWho(this.selectedWithWho);
-      this.audio.sounds.pi.play();
-    } else {
-      this.noInputFrameCounter++;
-    }
+    // selectedSide is locked to 0 (Play as Right); Play as Left is disabled
+    this.noInputFrameCounter++;
 
     if (
       this.keyboardArray[0].powerHit === 1 ||
       this.keyboardArray[1].powerHit === 1
     ) {
-      if (this.selectedWithWho === 1) {
-        this.physics.player1.isComputer = false;
-        this.physics.player2.isComputer = false;
-      } else {
-        if (this.keyboardArray[0].powerHit === 1) {
-          this.physics.player1.isComputer = false;
-          this.physics.player2.isComputer = true;
-        } else if (this.keyboardArray[1].powerHit === 1) {
-          this.physics.player1.isComputer = true;
-          this.physics.player2.isComputer = false;
-        }
-      }
+      // Play as Right (P2) — only option
+      this.physics.player1.isComputer = true;
+      this.physics.player2.isComputer = false;
       this.audio.sounds.pikachu.play();
       this.frameCounter = 0;
       this.noInputFrameCounter = 0;
@@ -294,6 +266,12 @@ export class PikachuVolleyball {
       this.physics.player1.isWinner = false;
       this.physics.player2.gameEnded = false;
       this.physics.player2.isWinner = false;
+
+      this.view.game.setPlayerSkins(
+        this.physics.player1.isComputer,
+        this.physics.player2.isComputer,
+      );
+      this._updateNicknameDisplay();
 
       this.scores[0] = 0;
       this.scores[1] = 0;
@@ -508,7 +486,23 @@ export class PikachuVolleyball {
     this.slowMotionNumOfSkippedFrames = 0;
     this.view.menu.visible = false;
     this.view.game.visible = false;
+    document.getElementById('nicknames-container').classList.add('hidden');
     this.state = this.intro;
+  }
+
+  /**
+   * Update the nickname display overlay based on current player sides
+   */
+  _updateNicknameDisplay() {
+    const p1Name = this.physics.player1.isComputer
+      ? this.modelName
+      : this.nickname;
+    const p2Name = this.physics.player2.isComputer
+      ? this.modelName
+      : this.nickname;
+    document.getElementById('player1-nickname').textContent = p1Name;
+    document.getElementById('player2-nickname').textContent = p2Name;
+    document.getElementById('nicknames-container').classList.remove('hidden');
   }
 
   /** @return {boolean} */

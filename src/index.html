@@ -175,6 +175,30 @@
                   </button>
                 </div>
               </div>
+              <div class="relative-container">
+                <button
+                  type="button"
+                  id="keymap-submenu-btn"
+                  class="btn submenu-btn"
+                >
+                  Keymap &#9654;&#xfe0e;
+                </button>
+                <div id="keymap-submenu" class="submenu">
+                  <button
+                    type="button"
+                    id="keymap-arrows-btn"
+                    class="btn selected"
+                  >
+                    <span class="check">&check; </span>Arrows + Space
+                  </button>
+                  <button type="button" id="keymap-wasd-btn" class="btn">
+                    <span class="check">&check; </span>WASD + Enter
+                  </button>
+                  <button type="button" id="keymap-original-btn" class="btn">
+                    <span class="check">&check; </span>Original (DGRV+Z)
+                  </button>
+                </div>
+              </div>
               <button type="button" id="reset-to-default-btn" class="btn">
                 Reset to default
               </button>
@@ -189,6 +213,14 @@
         </div>
       </div>
       <div id="game-canvas-container">
+        <div class="nicknames-container hidden" id="nicknames-container">
+          <div class="nickname left">
+            <span id="player1-nickname"></span>
+          </div>
+          <div class="nickname right">
+            <span id="player2-nickname"></span>
+          </div>
+        </div>
         <div class="fade-in-box about" id="about-box">
           <div id="about-box-head">
             <h1>Pikachu Volleyball</h1>
@@ -226,10 +258,26 @@
           </div>
           <div class="margin-top limit-width">
             <p>
-              <span class="thick">Controls:</span><br />
-              Player 1: D/G (left/right), R (up), F/V (down), Z (power hit)<br />
-              Player 2: Arrow keys, Enter (power hit)
+              <span class="thick">Controls (default):</span><br />
+              Arrow keys + Space<br />
+              <span style="font-size: 0.85em"
+                >Change in Options &rarr; Keymap</span
+              >
             </p>
+            <div class="nickname-input-container">
+              <label for="nickname-input"
+                >Nickname (maximum 8 characters)</label
+              >
+              <input
+                type="text"
+                id="nickname-input"
+                maxlength="8"
+                autocapitalize="none"
+                autocomplete="off"
+                autocorrect="off"
+                value="Player"
+              />
+            </div>
             <div class="margin-top">
               <button
                 type="button"

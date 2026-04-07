@@ -8,12 +8,12 @@
 'use strict';
 import { AnimatedSprite } from '@pixi/sprite-animated';
 import { Sprite } from '@pixi/sprite';
+import { Texture } from '@pixi/core';
 import { Container } from '@pixi/display';
 import { Cloud, Wave, cloudAndWaveEngine } from './cloud_and_wave.js';
 import { ASSETS_PATH } from './assets_path.js';
 
 /** @typedef {import('@pixi/loaders').LoaderResource} LoaderResource */
-/** @typedef {import('@pixi/core').Texture} Texture */
 
 const TEXTURES = ASSETS_PATH.TEXTURES;
 
@@ -87,8 +87,8 @@ export class MenuView {
         0,
       ),
       withWho: [
-        makeSpriteWithAnchorXY(textures, TEXTURES.WITH_COMPUTER, 0, 0),
-        makeSpriteWithAnchorXY(textures, TEXTURES.WITH_FRIEND, 0, 0),
+        new Sprite(makeTextTexture('Play as Right')),
+        new Sprite(makeTextTexture('Play as Left', 120, 20, '#888888')),
       ],
       sachisoft: makeSpriteWithAnchorXY(textures, TEXTURES.SACHISOFT, 0, 0),
       fight: makeSpriteWithAnchorXY(textures, TEXTURES.FIGHT, 0, 0),
@@ -336,9 +336,11 @@ export class GameView {
 
     // Display objects below
     this.bgContainer = makeBGContainer(textures);
-    const playerSprites = makePlayerAnimatedSprites(textures);
-    this.player1 = playerSprites[0];
-    this.player2 = playerSprites[1];
+    const playerData = makePlayerAnimatedSprites(textures);
+    this.player1 = playerData.sprites[0];
+    this.player2 = playerData.sprites[1];
+    this._yellowTextures = playerData.yellowTextures;
+    this._whiteTextures = playerData.whiteTextures;
     this.ball = makeBallAnimatedSprites(textures);
     this.ballHyper = makeSpriteWithAnchorXY(
       textures,
@@ -452,6 +454,21 @@ export class GameView {
     for (const prop in this.messages) {
       this.messages[prop].visible = false;
     }
+  }
+
+  /**
+   * Set player skins based on which player is computer.
+   * Computer gets white pikachu, human gets yellow.
+   * @param {boolean} isPlayer1Computer
+   * @param {boolean} isPlayer2Computer
+   */
+  setPlayerSkins(isPlayer1Computer, isPlayer2Computer) {
+    this.player1.textures = isPlayer1Computer
+      ? this._whiteTextures
+      : this._yellowTextures;
+    this.player2.textures = isPlayer2Computer
+      ? this._whiteTextures
+      : this._yellowTextures;
   }
 
   /** @typedef {import("./physics").PikaPhysics} PikaPhysics */
@@ -797,30 +814,55 @@ function makeBGContainer(textures) {
  * @param {Object.<string,Texture>} textures
  * @return {AnimatedSprite[]} [0] for player 1, [1] for player2
  */
-function makePlayerAnimatedSprites(textures) {
-  const getPlayerTexture = (i, j) => textures[TEXTURES.PIKACHU(i, j)];
-  const playerTextureArray = [];
+/**
+ * Build a texture array for a pikachu color variant
+ * @param {Object.<string,Texture>} textures
+ * @param {function(number,number):string} textureFn
+ * @return {Texture[]}
+ */
+function buildPlayerTextureArray(textures, textureFn) {
+  const arr = [];
   for (let i = 0; i < 7; i++) {
     if (i === 3) {
-      playerTextureArray.push(getPlayerTexture(i, 0));
-      playerTextureArray.push(getPlayerTexture(i, 1));
+      arr.push(textures[textureFn(i, 0)]);
+      arr.push(textures[textureFn(i, 1)]);
     } else if (i === 4) {
-      playerTextureArray.push(getPlayerTexture(i, 0));
+      arr.push(textures[textureFn(i, 0)]);
     } else {
       for (let j = 0; j < 5; j++) {
-        playerTextureArray.push(getPlayerTexture(i, j));
+        arr.push(textures[textureFn(i, j)]);
       }
     }
   }
-  const player1AnimatedSprite = new AnimatedSprite(playerTextureArray, false);
-  const player2AnimatedSprite = new AnimatedSprite(playerTextureArray, false);
+  return arr;
+}
+
+/**
+ * Make animated sprites for both players
+ * @param {Object.<string,Texture>} textures
+ * @return {{sprites: AnimatedSprite[], yellowTextures: Texture[], whiteTextures: Texture[]}}
+ */
+function makePlayerAnimatedSprites(textures) {
+  const yellowTextures = buildPlayerTextureArray(textures, TEXTURES.PIKACHU);
+  const whiteTextures = buildPlayerTextureArray(
+    textures,
+    TEXTURES.PIKACHU_WHITE,
+  );
+
+  // Both start with yellow; swapped at game start based on who is computer
+  const player1AnimatedSprite = new AnimatedSprite(yellowTextures, false);
+  const player2AnimatedSprite = new AnimatedSprite(yellowTextures, false);
 
   player1AnimatedSprite.anchor.x = 0.5;
   player1AnimatedSprite.anchor.y = 0.5;
   player2AnimatedSprite.anchor.x = 0.5;
   player2AnimatedSprite.anchor.y = 0.5;
 
-  return [player1AnimatedSprite, player2AnimatedSprite];
+  return {
+    sprites: [player1AnimatedSprite, player2AnimatedSprite],
+    yellowTextures,
+    whiteTextures,
+  };
 }
 
 /**
@@ -963,4 +1005,26 @@ function getFrameNumberForPlayerAnimatedSprite(state, frameNumber) {
   } else if (state > 4) {
     return 18 + 5 * (state - 5) + frameNumber;
   }
+}
+
+/**
+ * Create a PixiJS Texture from canvas-rendered text.
+ * Used for menu labels that replace the original Japanese sprite text.
+ * @param {string} text
+ * @param {number} [width=120]
+ * @param {number} [height=20]
+ * @param {string} [color='#ffffff']
+ * @return {Texture}
+ */
+function makeTextTexture(text, width = 120, height = 20, color = '#ffffff') {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = color;
+  ctx.font = `bold ${height - 4}px Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, width / 2, height / 2);
+  return Texture.from(canvas);
 }

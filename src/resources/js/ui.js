@@ -7,7 +7,7 @@ import { localStorageWrapper } from './utils/local_storage_wrapper.js';
 
 /** @typedef {import('./pikavolley.js').PikachuVolleyball} PikachuVolleyball */
 /** @typedef {import('@pixi/ticker').Ticker} Ticker */
-/** @typedef {{graphic?: string, bgm?: string, sfx?: string, speed?: string, winningScore?: string}} Options */
+/** @typedef {{graphic?: string, bgm?: string, sfx?: string, speed?: string, winningScore?: string, keymap?: string}} Options */
 
 /**
  * Enum for "game paused by what?".
@@ -120,6 +120,10 @@ export function setUpUI(pikaVolley, ticker) {
         pikaVolley.winningScore = 15;
         break;
     }
+    if (options.keymap) {
+      pikaVolley.keyboardArray[0].switchPreset(options.keymap);
+      pikaVolley.keyboardArray[1].switchPreset(options.keymap);
+    }
   };
 
   /**
@@ -143,6 +147,9 @@ export function setUpUI(pikaVolley, ticker) {
     if (options.winningScore) {
       localStorageWrapper.set('pv-offline-winningScore', options.winningScore);
     }
+    if (options.keymap) {
+      localStorageWrapper.set('pv-offline-keymap', options.keymap);
+    }
   };
 
   /**
@@ -155,6 +162,7 @@ export function setUpUI(pikaVolley, ticker) {
     sfx: localStorageWrapper.get('pv-offline-sfx'),
     speed: localStorageWrapper.get('pv-offline-speed'),
     winningScore: localStorageWrapper.get('pv-offline-winningScore'),
+    keymap: localStorageWrapper.get('pv-offline-keymap'),
   });
 
   /**
@@ -168,6 +176,19 @@ export function setUpUI(pikaVolley, ticker) {
 
   // Load and apply saved options
   applyOptions(loadOptions());
+
+  // Nickname input
+  const nicknameInput = document.getElementById('nickname-input');
+  const savedNickname = localStorageWrapper.get('pv-offline-nickname');
+  if (savedNickname) {
+    nicknameInput.value = savedNickname;
+    pikaVolley.nickname = savedNickname;
+  }
+  nicknameInput.addEventListener('input', () => {
+    const value = nicknameInput.value.trim().slice(0, 8);
+    pikaVolley.nickname = value || 'Player';
+    localStorageWrapper.set('pv-offline-nickname', pikaVolley.nickname);
+  });
 
   setUpBtns(pikaVolley, applyAndSaveOptions);
   setUpToShowDropdownsAndSubmenus(pikaVolley);
@@ -432,6 +453,18 @@ function setUpBtns(pikaVolley, applyAndSaveOptions) {
     pikaVolley.isPracticeMode = false;
   });
 
+  // Keymap preset buttons
+  const keymapBtns = {
+    arrows: document.getElementById('keymap-arrows-btn'),
+    wasd: document.getElementById('keymap-wasd-btn'),
+    original: document.getElementById('keymap-original-btn'),
+  };
+  for (const [preset, btn] of Object.entries(keymapBtns)) {
+    btn.addEventListener('click', () => {
+      applyAndSaveOptions({ keymap: preset });
+    });
+  }
+
   const aboutBox = document.getElementById('about-box');
   const closeAboutBtn = document.getElementById('close-about-btn');
   aboutBtn.addEventListener('click', () => {
@@ -474,6 +507,7 @@ function setUpBtns(pikaVolley, applyAndSaveOptions) {
       sfx: 'stereo',
       speed: 'medium',
       winningScore: '15',
+      keymap: 'arrows',
     };
     applyAndSaveOptions(defaultOptions);
   });
@@ -578,6 +612,16 @@ function setSelectedOptionsBtn(options) {
         break;
     }
   }
+  if (options.keymap) {
+    const btns = {
+      arrows: document.getElementById('keymap-arrows-btn'),
+      wasd: document.getElementById('keymap-wasd-btn'),
+      original: document.getElementById('keymap-original-btn'),
+    };
+    for (const [key, btn] of Object.entries(btns)) {
+      btn.classList.toggle('selected', key === options.keymap);
+    }
+  }
 }
 
 /**
@@ -637,6 +681,11 @@ function setUpToShowDropdownsAndSubmenus(pikaVolley) {
       showSubmenu('practice-mode-submenu-btn', 'practice-mode-submenu');
     });
   document
+    .getElementById('keymap-submenu-btn')
+    .addEventListener('mouseover', () => {
+      showSubmenu('keymap-submenu-btn', 'keymap-submenu');
+    });
+  document
     .getElementById('reset-to-default-btn')
     .addEventListener('mouseover', () => {
       hideSubmenus();
@@ -662,6 +711,11 @@ function setUpToShowDropdownsAndSubmenus(pikaVolley) {
     .getElementById('practice-mode-submenu-btn')
     .addEventListener('click', () => {
       showSubmenu('practice-mode-submenu-btn', 'practice-mode-submenu');
+    });
+  document
+    .getElementById('keymap-submenu-btn')
+    .addEventListener('click', () => {
+      showSubmenu('keymap-submenu-btn', 'keymap-submenu');
     });
   document
     .getElementById('reset-to-default-btn')
