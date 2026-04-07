@@ -144,6 +144,17 @@ function setUpInitialUI() {
 function setup() {
   const pikaVolley = new PikachuVolleyball(stage, loader.resources);
   setUpUI(pikaVolley, ticker);
+
+  // Load ONNX model if available (non-blocking — falls back to built-in AI)
+  pikaVolley.onnxAI
+    .load('models/experiment016.onnx')
+    .then(() => {
+      console.log(`AI model loaded: ${pikaVolley.onnxAI.modelName}`);
+    })
+    .catch((err) => {
+      console.warn('No AI model loaded, using built-in AI:', err.message);
+    });
+
   start(pikaVolley);
 }
 

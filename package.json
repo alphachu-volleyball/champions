@@ -30,7 +30,8 @@
     "@pixi/sprite": "^6.4.2",
     "@pixi/sprite-animated": "^6.4.2",
     "@pixi/spritesheet": "^6.4.2",
-    "@pixi/ticker": "^6.4.2"
+    "@pixi/ticker": "^6.4.2",
+    "onnxruntime-web": "^1.24.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
