@@ -175,6 +175,54 @@
                   </button>
                 </div>
               </div>
+              <div class="relative-container">
+                <button
+                  type="button"
+                  id="p1-keys-submenu-btn"
+                  class="btn submenu-btn"
+                >
+                  P1 Keys &#9654;&#xfe0e;
+                </button>
+                <div id="p1-keys-submenu" class="submenu">
+                  <button
+                    type="button"
+                    id="p1-keys-wasd-btn"
+                    class="btn selected"
+                  >
+                    <span class="check">&check; </span>WASD + Enter
+                  </button>
+                  <button type="button" id="p1-keys-original-btn" class="btn">
+                    <span class="check">&check; </span>Original (DGRV+Z)
+                  </button>
+                  <button type="button" id="p1-keys-arrows-btn" class="btn">
+                    <span class="check">&check; </span>Arrows + Space
+                  </button>
+                </div>
+              </div>
+              <div class="relative-container">
+                <button
+                  type="button"
+                  id="p2-keys-submenu-btn"
+                  class="btn submenu-btn"
+                >
+                  P2 Keys &#9654;&#xfe0e;
+                </button>
+                <div id="p2-keys-submenu" class="submenu">
+                  <button
+                    type="button"
+                    id="p2-keys-arrows-btn"
+                    class="btn selected"
+                  >
+                    <span class="check">&check; </span>Arrows + Space
+                  </button>
+                  <button type="button" id="p2-keys-wasd-btn" class="btn">
+                    <span class="check">&check; </span>WASD + Enter
+                  </button>
+                  <button type="button" id="p2-keys-original-btn" class="btn">
+                    <span class="check">&check; </span>Original (DGRV+Z)
+                  </button>
+                </div>
+              </div>
               <button type="button" id="reset-to-default-btn" class="btn">
                 Reset to default
               </button>
@@ -226,9 +274,12 @@
           </div>
           <div class="margin-top limit-width">
             <p>
-              <span class="thick">Controls:</span><br />
-              Player 1: D/G (left/right), R (up), F/V (down), Z (power hit)<br />
-              Player 2: Arrow keys, Enter (power hit)
+              <span class="thick">Controls (default):</span><br />
+              Player 1: WASD + Enter<br />
+              Player 2: Arrow keys + Space<br />
+              <span style="font-size: 0.85em"
+                >Change key bindings in Options &rarr; P1/P2 Keys</span
+              >
             </p>
             <div class="margin-top">
               <button

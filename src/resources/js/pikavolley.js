@@ -40,14 +40,8 @@ export class PikachuVolleyball {
     this.audio = new PikaAudio(resources);
     this.physics = new PikaPhysics(true, true);
     this.keyboardArray = [
-      new PikaKeyboard('KeyD', 'KeyG', 'KeyR', 'KeyV', 'KeyZ', 'KeyF'), // for player1
-      new PikaKeyboard( // for player2
-        'ArrowLeft',
-        'ArrowRight',
-        'ArrowUp',
-        'ArrowDown',
-        'Enter',
-      ),
+      new PikaKeyboard('wasd'), // for player1
+      new PikaKeyboard('arrows'), // for player2
     ];
 
     /** @type {number} game fps */

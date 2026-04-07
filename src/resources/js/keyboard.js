@@ -5,70 +5,120 @@
 import { PikaUserInput } from './physics.js';
 
 /**
+ * Keyboard preset definitions
+ * Each preset maps actions to KeyboardEvent.code values
+ */
+export const KEY_PRESETS = {
+  original: {
+    label: 'Original (DGRV+Z)',
+    left: ['KeyD'],
+    right: ['KeyG'],
+    up: ['KeyR'],
+    down: ['KeyF', 'KeyV'],
+    powerHit: ['KeyZ'],
+  },
+  wasd: {
+    label: 'WASD + Enter',
+    left: ['KeyA'],
+    right: ['KeyD'],
+    up: ['KeyW'],
+    down: ['KeyS'],
+    powerHit: ['Enter'],
+  },
+  arrows: {
+    label: 'Arrows + Space',
+    left: ['ArrowLeft'],
+    right: ['ArrowRight'],
+    up: ['ArrowUp'],
+    down: ['ArrowDown'],
+    powerHit: ['Space'],
+  },
+};
+
+/**
  * Class representing a keyboard used to control a player
  */
 export class PikaKeyboard extends PikaUserInput {
   /**
-   * Create a keyboard used for game controller
-   * left, right, up, down, powerHit: KeyboardEvent.code value for each
-   * Refer {@link https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code/code_values}
-   * @param {string} left KeyboardEvent.code value of the key to use for left
-   * @param {string} right KeyboardEvent.code value of the key to use for right
-   * @param {string} up KeyboardEvent.code value of the key to use for up
-   * @param {string} down KeyboardEvent.code value of the key to use for down
-   * @param {string} powerHit KeyboardEvent.code value of the key to use for power hit or selection
-   * @param {string} downRight KeyboardEvent.code value of the key to use for having the same effect
-   *                           when pressing down key and right key at the same time (Only player 1
-   *                           has this key)
+   * Create a keyboard from a preset name or custom key config
+   * @param {string} presetName name of the preset (e.g. 'original', 'wasd', 'arrows')
    */
-  constructor(left, right, up, down, powerHit, downRight = null) {
+  constructor(presetName) {
     super();
 
     /** @type {boolean} */
     this.powerHitKeyIsDownPrevious = false;
 
-    /** @type {Key} */
-    this.leftKey = new Key(left);
-    /** @type {Key} */
-    this.rightKey = new Key(right);
-    /** @type {Key} */
-    this.upKey = new Key(up);
-    /** @type {Key} */
-    this.downKey = new Key(down);
-    /** @type {Key} */
-    this.powerHitKey = new Key(powerHit);
-    /** @type {Key} */
-    this.downRightKey = new Key(downRight);
+    /** @type {string} */
+    this.presetName = presetName;
+
+    this._applyPreset(presetName);
+  }
+
+  /**
+   * Apply a key preset
+   * @param {string} presetName
+   */
+  _applyPreset(presetName) {
+    const preset = KEY_PRESETS[presetName];
+    if (!preset) {
+      throw new Error(`Unknown key preset: ${presetName}`);
+    }
+
+    // Unsubscribe existing keys if any
+    if (this.leftKeys) {
+      this.unsubscribe();
+    }
+
+    this.presetName = presetName;
+    this.leftKeys = preset.left.map((code) => new Key(code));
+    this.rightKeys = preset.right.map((code) => new Key(code));
+    this.upKeys = preset.up.map((code) => new Key(code));
+    this.downKeys = preset.down.map((code) => new Key(code));
+    this.powerHitKeys = preset.powerHit.map((code) => new Key(code));
+  }
+
+  /**
+   * Switch to a different key preset
+   * @param {string} presetName
+   */
+  switchPreset(presetName) {
+    this._applyPreset(presetName);
+  }
+
+  /**
+   * Check if any key in the array is down
+   * @param {Key[]} keys
+   * @return {boolean}
+   */
+  _anyDown(keys) {
+    for (const key of keys) {
+      if (key.isDown) return true;
+    }
+    return false;
   }
 
   /**
    * Get xDirection, yDirection, powerHit input from the keyboard.
-   * This method is for freezing the keyboard input during the process of one game frame.
    */
   getInput() {
-    if (this.leftKey.isDown) {
+    if (this._anyDown(this.leftKeys)) {
       this.xDirection = -1;
-    } else if (
-      this.rightKey.isDown ||
-      (this.downRightKey && this.downRightKey.isDown)
-    ) {
+    } else if (this._anyDown(this.rightKeys)) {
       this.xDirection = 1;
     } else {
       this.xDirection = 0;
     }
 
-    if (this.upKey.isDown) {
+    if (this._anyDown(this.upKeys)) {
       this.yDirection = -1;
-    } else if (
-      this.downKey.isDown ||
-      (this.downRightKey && this.downRightKey.isDown)
-    ) {
+    } else if (this._anyDown(this.downKeys)) {
       this.yDirection = 1;
     } else {
       this.yDirection = 0;
     }
 
-    const isDown = this.powerHitKey.isDown;
+    const isDown = this._anyDown(this.powerHitKeys);
     if (!this.powerHitKeyIsDownPrevious && isDown) {
       this.powerHit = 1;
     } else {
@@ -78,27 +128,37 @@ export class PikaKeyboard extends PikaUserInput {
   }
 
   /**
-   * Subscribe keydown, keyup event listeners for the keys of this keyboard
+   * Subscribe keydown, keyup event listeners for all keys
    */
   subscribe() {
-    this.leftKey.subscribe();
-    this.rightKey.subscribe();
-    this.upKey.subscribe();
-    this.downKey.subscribe();
-    this.powerHitKey.subscribe();
-    this.downRightKey.subscribe();
+    for (const keys of [
+      this.leftKeys,
+      this.rightKeys,
+      this.upKeys,
+      this.downKeys,
+      this.powerHitKeys,
+    ]) {
+      for (const key of keys) {
+        key.subscribe();
+      }
+    }
   }
 
   /**
-   * Unsubscribe keydown, keyup event listeners for the keys of this keyboard
+   * Unsubscribe keydown, keyup event listeners for all keys
    */
   unsubscribe() {
-    this.leftKey.unsubscribe();
-    this.rightKey.unsubscribe();
-    this.upKey.unsubscribe();
-    this.downKey.unsubscribe();
-    this.powerHitKey.unsubscribe();
-    this.downRightKey.unsubscribe();
+    for (const keys of [
+      this.leftKeys,
+      this.rightKeys,
+      this.upKeys,
+      this.downKeys,
+      this.powerHitKeys,
+    ]) {
+      for (const key of keys) {
+        key.unsubscribe();
+      }
+    }
   }
 }
 
@@ -150,12 +210,6 @@ class Key {
    * Subscribe event listeners
    */
   subscribe() {
-    // I think an event listener for keyup should be attached
-    // before the one for keydown to prevent a buggy behavior.
-    // If keydown event listener were attached first and
-    // a key was downed and upped before keyup event listener were attached,
-    // I think the value of this.isDown would be true (and the value of this.isUp would be false)
-    // for a while before the user press this key again.
     window.addEventListener('keyup', this.upListener);
     window.addEventListener('keydown', this.downListener);
   }

@@ -816,10 +816,10 @@ function makePlayerAnimatedSprites(textures) {
   }
 
   const player1TextureArray = buildTextureArray(
-    (i, j) => textures[TEXTURES.PIKACHU_WHITE(i, j)]
+    (i, j) => textures[TEXTURES.PIKACHU_WHITE(i, j)],
   );
   const player2TextureArray = buildTextureArray(
-    (i, j) => textures[TEXTURES.PIKACHU(i, j)]
+    (i, j) => textures[TEXTURES.PIKACHU(i, j)],
   );
   const player1AnimatedSprite = new AnimatedSprite(player1TextureArray, false);
   const player2AnimatedSprite = new AnimatedSprite(player2TextureArray, false);
