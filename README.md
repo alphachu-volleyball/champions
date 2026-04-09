@@ -1,5 +1,7 @@
 # champions
 
+[![Release](https://img.shields.io/github/v/release/alphachu-volleyball/champions?label=release&logo=github)](https://github.com/alphachu-volleyball/champions/releases)
+
 Web demo for [alphachu-volleyball](https://github.com/alphachu-volleyball) — play against RL-trained AI in your browser.
 
 > **Original game**: Pikachu Volleyball (対戦ぴかちゅ～　ﾋﾞｰﾁﾊﾞﾚｰ編)
