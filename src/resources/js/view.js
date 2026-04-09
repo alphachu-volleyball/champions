@@ -86,10 +86,6 @@ export class MenuView {
         0,
         0,
       ),
-      withWho: [
-        new Sprite(makeTextTexture('Play as Right')),
-        new Sprite(makeTextTexture('Play as Left', 120, 20, '#888888')),
-      ],
       sachisoft: makeSpriteWithAnchorXY(textures, TEXTURES.SACHISOFT, 0, 0),
       fight: makeSpriteWithAnchorXY(textures, TEXTURES.FIGHT, 0, 0),
     };
@@ -110,15 +106,11 @@ export class MenuView {
     this.container.addChild(this.sittingPikachuTilesContainer);
     this.container.addChild(this.messages.pokemon);
     this.container.addChild(this.messages.pikachuVolleyball);
-    this.container.addChild(this.messages.withWho[0]);
-    this.container.addChild(this.messages.withWho[1]);
     this.container.addChild(this.messages.sachisoft);
     this.container.addChild(this.messages.fight);
     this.initializeVisibles();
 
     this.sittingPikachuTilesDisplacement = 0;
-    this.selectedWithWho = -1; // 0: with computer, 1: with friend, -1: not selected
-    this.selectedWithWhoMessageSizeIncrement = 2;
   }
 
   /** @return {boolean} Is visible? */
@@ -287,52 +279,6 @@ export class MenuView {
     if (frameCounter > 71) {
       this.messages.pokemon.visible = true;
     }
-  }
-
-  /**
-   * referred to FUN_00405ec0
-   * Draw with who messages (with computer or with friend) as frame goes
-   * @param {number} frameCounter
-   */
-  drawWithWhoMessages(frameCounter) {
-    const withWho = this.messages.withWho;
-    const w = withWho[0].texture.width;
-    const h = withWho[0].texture.height;
-
-    if (frameCounter === 0) {
-      for (let i = 0; i < 2; i++) {
-        withWho[i].visible = false;
-      }
-      return;
-    }
-
-    if (frameCounter > 70) {
-      if (this.selectedWithWhoMessageSizeIncrement < 10) {
-        this.selectedWithWhoMessageSizeIncrement += 1;
-      }
-      for (let i = 0; i < 2; i++) {
-        const selected = Number(this.selectedWithWho === i); // 1 if selected, 0 otherwise
-        const halfWidthIncrement =
-          selected * (this.selectedWithWhoMessageSizeIncrement + 2);
-        const halfHeightIncrement =
-          selected * this.selectedWithWhoMessageSizeIncrement;
-
-        withWho[i].visible = true;
-        withWho[i].x = 216 - w / 2 - halfWidthIncrement;
-        withWho[i].y = 184 + 30 * i - halfHeightIncrement;
-        withWho[i].width = w + 2 * halfWidthIncrement;
-        withWho[i].height = h + 2 * halfHeightIncrement;
-      }
-    }
-  }
-
-  /**
-   * Select with who for the effect that selected option gets bigger
-   * @param {number} i 0: with computer, 1: with friend
-   */
-  selectWithWho(i) {
-    this.selectedWithWho = i;
-    this.selectedWithWhoMessageSizeIncrement = 2;
   }
 
   /**
