@@ -179,9 +179,16 @@ export function setUpUI(pikaVolley, ticker) {
   // Nickname input
   const nicknameInput = document.getElementById('nickname-input');
   const savedNickname = localStorageWrapper.get('pv-offline-nickname');
-  if (savedNickname) {
-    nicknameInput.value = savedNickname;
-    pikaVolley.nickname = savedNickname;
+  // The input field may already contain a value typed before setUpUI ran
+  // (the About box is visible before setup). Prefer localStorage over the
+  // current DOM value so a previously-saved nickname isn't lost, but fall
+  // back to whatever the user typed in the initial About box.
+  const initialNickname =
+    savedNickname || nicknameInput.value.trim().slice(0, 8);
+  if (initialNickname) {
+    nicknameInput.value = initialNickname;
+    pikaVolley.nickname = initialNickname || 'Player';
+    localStorageWrapper.set('pv-offline-nickname', pikaVolley.nickname);
   }
   nicknameInput.addEventListener('input', () => {
     const value = nicknameInput.value.trim().slice(0, 8);
