@@ -278,7 +278,7 @@ export class PikachuVolleyball {
         this.physics.player2.isComputer,
       );
       this._updateNicknameDisplay();
-      this._setupAICallback();
+      this._setupAI();
 
       this.scores[0] = 0;
       this.scores[1] = 0;
@@ -328,7 +328,10 @@ export class PikachuVolleyball {
       return;
     }
 
-    const isBallTouchingGround = await this.physics.runEngineForNextFrame(
+    // Run AI inference BEFORE physics step (matches pika-zoo timing)
+    await this._runAIInference();
+
+    const isBallTouchingGround = this.physics.runEngineForNextFrame(
       this.keyboardArray,
     );
 
@@ -498,28 +501,47 @@ export class PikachuVolleyball {
   }
 
   /**
-   * Set up the ONNX AI callback on the physics engine.
-   * Falls back to built-in AI if no model is loaded.
+   * Set up AI for the current game.
+   * Unsubscribes computer player's keyboard and resets AI state.
    */
-  _setupAICallback() {
+  _setupAI() {
     this.onnxAI.reset();
 
-    // Unsubscribe computer player's keyboard to prevent human key input leaking
-    const computerIdx = this.physics.player1.isComputer ? 0 : 1;
-    this.keyboardArray[computerIdx].unsubscribe();
+    this._computerIdx = this.physics.player1.isComputer ? 0 : 1;
+    this._humanIdx = this._computerIdx === 0 ? 1 : 0;
 
+    // Unsubscribe computer player's keyboard to prevent human key input leaking
+    this.keyboardArray[this._computerIdx].unsubscribe();
+
+    // When ONNX model is loaded, disable built-in AI so physics engine
+    // uses the keyboardArray input set by _runAIInference() instead
     if (this.onnxAI.loaded) {
-      const ai = this.onnxAI;
-      const physics = this.physics;
-      this.physics.externalAICallback = (player, ball, otherPlayer, input) => {
-        const humanPlayer = player.isPlayer2
-          ? physics.player1
-          : physics.player2;
-        return ai.decide(player, humanPlayer, ball, input);
-      };
-    } else {
-      this.physics.externalAICallback = null;
+      const computerPlayer =
+        this._computerIdx === 0 ? this.physics.player1 : this.physics.player2;
+      computerPlayer.isComputer = false;
     }
+  }
+
+  /**
+   * Run ONNX AI inference using current game state (before physics step).
+   * Writes the result directly to the computer player's keyboardArray slot.
+   * Falls back to built-in AI (letComputerDecideUserInput) if no model loaded.
+   */
+  async _runAIInference() {
+    if (!this.onnxAI.loaded) return;
+
+    const computerPlayer =
+      this._computerIdx === 0 ? this.physics.player1 : this.physics.player2;
+    const humanPlayer =
+      this._computerIdx === 0 ? this.physics.player2 : this.physics.player1;
+
+    await this.onnxAI.decide(
+      computerPlayer,
+      humanPlayer,
+      this.physics.ball,
+      this.keyboardArray[this._computerIdx],
+      this.keyboardArray[this._humanIdx],
+    );
   }
 
   /**
