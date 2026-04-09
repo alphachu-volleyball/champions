@@ -106,6 +106,17 @@ Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`
 - Models are loaded at runtime via ONNX Runtime Web
 - Models are NOT committed to Git
 
+### Available AI Opponents
+
+| AI | Side | Human plays as | Skin | Source |
+|----|------|---------------|------|--------|
+| **Alphachu v1** | Left (P1) | Right (P2) | `#ffffff` white | [Hugging Face](https://huggingface.co/alphachu-volleyball/alphachu-v1) |
+| **Builtin** | Left or Right | Either side | `#ffffff` white | Original game heuristic AI |
+
+- AI player always renders as `#ffffff` white pikachu, human as `#ffff00` yellow pikachu
+- Available opponents and supported sides are configured in `src/manifest.json`
+- Model selection → side selection flow in the menu
+
 ### Actor Types and Input Architecture
 
 Three actor types exist, each with a different input mechanism:
