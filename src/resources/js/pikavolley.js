@@ -254,8 +254,8 @@ export class PikachuVolleyball {
         this.physics.player1.isComputer,
         this.physics.player2.isComputer,
       );
-      this._updateNicknameDisplay();
       this._setupAI();
+      this._updateNicknameDisplay();
 
       this.scores[0] = 0;
       this.scores[1] = 0;
