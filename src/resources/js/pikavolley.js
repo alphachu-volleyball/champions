@@ -2,7 +2,7 @@
  * The Controller part in MVC pattern
  */
 'use strict';
-import { GROUND_HALF_WIDTH, PikaPhysics } from './physics.js';
+import { GROUND_HALF_WIDTH, PikaPhysics, PikaUserInput } from './physics.js';
 import { MenuView, GameView, FadeInOut, IntroView } from './view.js';
 import { PikaKeyboard } from './keyboard.js';
 import { PikaAudio } from './audio.js';
@@ -40,10 +40,17 @@ export class PikachuVolleyball {
 
     this.audio = new PikaAudio(resources);
     this.physics = new PikaPhysics(true, true);
-    this.keyboardArray = [
-      new PikaKeyboard('arrows'),
-      new PikaKeyboard('arrows'),
-    ];
+
+    /** @type {PikaKeyboard} single keyboard for the human player */
+    this.humanKeyboard = new PikaKeyboard('arrows');
+    /** @type {PikaUserInput} input slot for the AI player */
+    this.aiInput = new PikaUserInput();
+    /**
+     * Input array passed to physics engine: [P1 input, P2 input].
+     * Assembled by _setupAI() based on which side is human/computer.
+     * @type {PikaUserInput[]}
+     */
+    this.userInputArray = [this.humanKeyboard, this.aiInput];
 
     /** @type {number} game fps */
     this.normalFPS = 25;
@@ -138,8 +145,7 @@ export class PikachuVolleyball {
       this.slowMotionNumOfSkippedFrames = 0;
     }
     // catch keyboard input and freeze it
-    this.keyboardArray[0].getInput();
-    this.keyboardArray[1].getInput();
+    this.humanKeyboard.getInput();
 
     this._processing = true;
     Promise.resolve(this.state()).finally(() => {
@@ -161,10 +167,7 @@ export class PikachuVolleyball {
     this.view.intro.drawMark(this.frameCounter);
     this.frameCounter++;
 
-    if (
-      this.keyboardArray[0].powerHit === 1 ||
-      this.keyboardArray[1].powerHit === 1
-    ) {
+    if (this.humanKeyboard.powerHit === 1) {
       this.frameCounter = 0;
       this.view.intro.visible = false;
       this.state = this.menu;
@@ -193,11 +196,7 @@ export class PikachuVolleyball {
     this.view.menu.drawPokemonMessage(this.frameCounter);
     this.frameCounter++;
 
-    if (
-      this.frameCounter < 71 &&
-      (this.keyboardArray[0].powerHit === 1 ||
-        this.keyboardArray[1].powerHit === 1)
-    ) {
+    if (this.frameCounter < 71 && this.humanKeyboard.powerHit === 1) {
       this.frameCounter = 71;
       return;
     }
@@ -291,9 +290,7 @@ export class PikachuVolleyball {
    * @type {GameState}
    */
   async round() {
-    const pressedPowerHit =
-      this.keyboardArray[0].powerHit === 1 ||
-      this.keyboardArray[1].powerHit === 1;
+    const pressedPowerHit = this.humanKeyboard.powerHit === 1;
 
     if (
       this.physics.player1.isComputer === true &&
@@ -310,7 +307,7 @@ export class PikachuVolleyball {
     await this._runAIInference();
 
     const isBallTouchingGround = this.physics.runEngineForNextFrame(
-      this.keyboardArray,
+      this.userInputArray,
     );
 
     this.playSoundEffect();
@@ -505,19 +502,13 @@ export class PikachuVolleyball {
   async modelSelect() {
     this.view.menu.drawModelSelectMessages();
 
-    if (
-      this.keyboardArray[0].yDirection === -1 ||
-      this.keyboardArray[1].yDirection === -1
-    ) {
+    if (this.humanKeyboard.yDirection === -1) {
       const cur = this.view.menu.selectedModel;
       if (cur > 0) {
         this.view.menu.selectModel(cur - 1);
         this.audio.sounds.pi.play();
       }
-    } else if (
-      this.keyboardArray[0].yDirection === 1 ||
-      this.keyboardArray[1].yDirection === 1
-    ) {
+    } else if (this.humanKeyboard.yDirection === 1) {
       const cur = this.view.menu.selectedModel;
       if (cur < this.view.menu.modelCount - 1) {
         this.view.menu.selectModel(cur + 1);
@@ -525,10 +516,7 @@ export class PikachuVolleyball {
       }
     }
 
-    if (
-      this.keyboardArray[0].powerHit === 1 ||
-      this.keyboardArray[1].powerHit === 1
-    ) {
+    if (this.humanKeyboard.powerHit === 1) {
       const model = this.availableModels[this.view.menu.selectedModel];
       this._selectedModelEntry = model;
       this.view.menu.showModelLoading();
@@ -588,19 +576,13 @@ export class PikachuVolleyball {
     const leftEnabled = sides.includes('left');
     const rightEnabled = sides.includes('right');
 
-    if (
-      this.keyboardArray[0].yDirection === -1 ||
-      this.keyboardArray[1].yDirection === -1
-    ) {
+    if (this.humanKeyboard.yDirection === -1) {
       if (this._selectedSide === 1 && leftEnabled) {
         this._selectedSide = 0;
         this.view.menu.selectSide(this._selectedSide);
         this.audio.sounds.pi.play();
       }
-    } else if (
-      this.keyboardArray[0].yDirection === 1 ||
-      this.keyboardArray[1].yDirection === 1
-    ) {
+    } else if (this.humanKeyboard.yDirection === 1) {
       if (this._selectedSide === 0 && rightEnabled) {
         this._selectedSide = 1;
         this.view.menu.selectSide(this._selectedSide);
@@ -608,10 +590,7 @@ export class PikachuVolleyball {
       }
     }
 
-    if (
-      this.keyboardArray[0].powerHit === 1 ||
-      this.keyboardArray[1].powerHit === 1
-    ) {
+    if (this.humanKeyboard.powerHit === 1) {
       if (this._selectedSide === 0) {
         // Play as Left (P1)
         this.physics.player1.isComputer = false;
@@ -630,49 +609,58 @@ export class PikachuVolleyball {
 
   /**
    * Set up AI for the current game.
-   * Unsubscribes computer player's keyboard and resets AI state.
+   * Assembles userInputArray based on which side is human/computer.
+   */
+  /**
+   * Set up AI for the current game.
+   * Assembles userInputArray based on which side is human/computer.
+   * Must be called BEFORE isComputer is modified for ONNX.
    */
   _setupAI() {
     this.onnxAI.reset();
 
-    // Re-subscribe all keyboards first (may have been unsubscribed in a previous game)
-    this.keyboardArray[0].subscribe();
-    this.keyboardArray[1].subscribe();
+    // Store side assignment (before modifying isComputer for ONNX)
+    this._humanIsP1 = !this.physics.player1.isComputer;
 
-    this._computerIdx = this.physics.player1.isComputer ? 0 : 1;
-    this._humanIdx = this._computerIdx === 0 ? 1 : 0;
-
-    // Unsubscribe computer player's keyboard to prevent human key input leaking
-    this.keyboardArray[this._computerIdx].unsubscribe();
+    // Assemble input array: human keyboard goes to human's side,
+    // AI input goes to computer's side
+    if (this._humanIsP1) {
+      this.userInputArray = [this.humanKeyboard, this.aiInput];
+    } else {
+      this.userInputArray = [this.aiInput, this.humanKeyboard];
+    }
 
     // When ONNX model is loaded, disable built-in AI so physics engine
-    // uses the keyboardArray input set by _runAIInference() instead
+    // uses the aiInput set by _runAIInference() instead
     if (this.onnxAI.loaded) {
-      const computerPlayer =
-        this._computerIdx === 0 ? this.physics.player1 : this.physics.player2;
+      const computerPlayer = this._humanIsP1
+        ? this.physics.player2
+        : this.physics.player1;
       computerPlayer.isComputer = false;
     }
   }
 
   /**
    * Run ONNX AI inference using current game state (before physics step).
-   * Writes the result directly to the computer player's keyboardArray slot.
+   * Writes the result to this.aiInput.
    * Falls back to built-in AI (letComputerDecideUserInput) if no model loaded.
    */
   async _runAIInference() {
     if (!this.onnxAI.loaded) return;
 
-    const computerPlayer =
-      this._computerIdx === 0 ? this.physics.player1 : this.physics.player2;
-    const humanPlayer =
-      this._computerIdx === 0 ? this.physics.player2 : this.physics.player1;
+    const computerPlayer = this._humanIsP1
+      ? this.physics.player2
+      : this.physics.player1;
+    const humanPlayer = this._humanIsP1
+      ? this.physics.player1
+      : this.physics.player2;
 
     await this.onnxAI.decide(
       computerPlayer,
       humanPlayer,
       this.physics.ball,
-      this.keyboardArray[this._computerIdx],
-      this.keyboardArray[this._humanIdx],
+      this.aiInput,
+      this.humanKeyboard,
     );
   }
 
@@ -680,12 +668,8 @@ export class PikachuVolleyball {
    * Update the nickname display overlay based on current player sides
    */
   _updateNicknameDisplay() {
-    const p1Name = this.physics.player1.isComputer
-      ? this.onnxAI.modelName
-      : this.nickname;
-    const p2Name = this.physics.player2.isComputer
-      ? this.onnxAI.modelName
-      : this.nickname;
+    const p1Name = this._humanIsP1 ? this.nickname : this.onnxAI.modelName;
+    const p2Name = this._humanIsP1 ? this.onnxAI.modelName : this.nickname;
     document.getElementById('player1-nickname').textContent = p1Name;
     document.getElementById('player2-nickname').textContent = p2Name;
     document.getElementById('nicknames-container').classList.remove('hidden');
