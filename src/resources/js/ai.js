@@ -247,22 +247,25 @@ export class OnnxAI {
 
   /**
    * Load an ONNX model from a URL.
-   * Automatically fetches the companion .json config file
-   * (same URL with .onnx replaced by .json).
    * @param {string} modelUrl URL to the .onnx file
+   * @param {string} [configUrl] URL to the .json config file (defaults to modelUrl with .json extension)
    */
-  async load(modelUrl) {
-    // Fetch config JSON (same path, .json extension)
-    const configUrl = modelUrl.replace(/\.onnx$/i, '.json');
+  async load(modelUrl, configUrl) {
+    const cfgUrl = configUrl || modelUrl.replace(/\.onnx$/i, '.json');
     let config = {};
     try {
-      const resp = await fetch(configUrl);
+      const resp = await fetch(cfgUrl);
       if (resp.ok) config = await resp.json();
     } catch {
       // No config file — use defaults
     }
 
-    this.session = await ort.InferenceSession.create(modelUrl, {
+    // Fetch model as ArrayBuffer (handles redirects from Hugging Face, etc.)
+    const modelResp = await fetch(modelUrl);
+    if (!modelResp.ok)
+      throw new Error(`model fetch failed: ${modelResp.status}`);
+    const modelBuffer = await modelResp.arrayBuffer();
+    this.session = await ort.InferenceSession.create(modelBuffer, {
       executionProviders: ['wasm'],
     });
     this.loaded = true;
