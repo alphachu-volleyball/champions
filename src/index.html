@@ -223,71 +223,204 @@
         </div>
         <div class="fade-in-box about" id="about-box">
           <div id="about-box-head">
-            <h1>Pikachu Volleyball</h1>
+            <h1>alphachu-volleyball/champions</h1>
             <p class="original-by">
-              The original Pikachu Volleyball (対戦ぴかちゅ～　ﾋﾞｰﾁﾊﾞﾚｰ編) was
-              developed by<br />
-              1997 (C)
-              <span class="no-wrap">SACHI SOFT / SAWAYAKAN Programmers</span
-              ><br />
-              1997 (C) <span class="no-wrap">Satoshi Takenouchi</span>
-            </p>
-            <p class="reverse-engineered-by">
-              The original game was reverse engineered<br />
-              and implemented into this web version by<br />
-              <span class="no-wrap"
-                ><a href="https://gorisanson.github.io/">Kyutae Lee</a></span
-              >
+              Based on 対戦ぴかちゅ～　ﾋﾞｰﾁﾊﾞﾚｰ編<br />
+              1997 (C) SACHI SOFT / SAWAYAKAN Programmers
+              &amp; Satoshi Takenouchi
             </p>
             <p class="source-code-on">
-              Source code on
-              <a
-                href="https://github.com/gorisanson/pikachu-volleyball"
-                target="_blank"
-                rel="noopener"
-                >GitHub</a
-              >
-              |
-              <a
-                href="https://github.com/alphachu-volleyball/champions"
-                target="_blank"
-                rel="noopener"
-                >alphachu fork</a
-              >
+              Play against RL-trained AI in the browser.
             </p>
+            <div class="about-grid">
+              <div class="about-grid-cell about-grid-cell-center">
+                <p class="about-section-title thick">Controls</p>
+                <p>
+                  Arrow keys + Space<br />
+                  <span style="font-size: 0.85em"
+                    >Change in Options &rarr; Keymap</span
+                  >
+                </p>
+              </div>
+              <div class="about-grid-cell about-grid-cell-center about-grid-cell-nickname">
+                <p class="about-section-title thick">Nickname</p>
+                <div class="nickname-input-area">
+                <input
+                  type="text"
+                  id="nickname-input"
+                  maxlength="8"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  placeholder="max 8 chars"
+                  value="Player"
+                />
+                </div>
+              </div>
+              <div class="about-grid-cell about-grid-cell-center">
+                <p class="about-section-title thick">AIs</p>
+                <table class="references-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Side</th>
+                      <th>Skin</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><a href="https://huggingface.co/alphachu-volleyball/alphachu-v1" target="_blank" rel="noopener">Alphachu v1</a></td>
+                      <td>Left</td>
+                      <td><span class="skin-dot" style="background:#ffffff"></span> White</td>
+                    </tr>
+                    <tr>
+                      <td>Builtin</td>
+                      <td>Left / Right</td>
+                      <td><span class="skin-dot" style="background:#ff8c00"></span> Orange</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="about-grid about-grid-bottom">
+              <div class="about-grid-cell">
+                <p class="about-section-title thick">Projects</p>
+                <table class="references-table">
+                  <tbody>
+                    <tr>
+                      <td>
+                        <a
+                          href="https://github.com/alphachu-volleyball"
+                          target="_blank"
+                          rel="noopener"
+                          >alphachu-volleyball</a
+                        >
+                      </td>
+                      <td>GitHub org</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <a
+                          href="https://github.com/alphachu-volleyball/pika-zoo"
+                          target="_blank"
+                          rel="noopener"
+                          >pika-zoo</a
+                        >
+                      </td>
+                      <td>PettingZoo + SB3 RL env</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <a
+                          href="https://github.com/alphachu-volleyball/training-center"
+                          target="_blank"
+                          rel="noopener"
+                          >training-center</a
+                        >
+                      </td>
+                      <td>Training &rarr; ONNX export</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <a
+                          href="https://github.com/alphachu-volleyball/champions"
+                          target="_blank"
+                          rel="noopener"
+                          >champions</a
+                        >
+                      </td>
+                      <td>Web demo (this page)</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <a
+                          href="https://github.com/alphachu-volleyball/alphachu-pokedex"
+                          target="_blank"
+                          rel="noopener"
+                          >Alphachu Pok&eacute;dex</a
+                        >
+                      </td>
+                      <td>Experiment notes &amp; plans</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <a
+                          href="https://wandb.ai/ootzk/alphachu-volleyball"
+                          target="_blank"
+                          rel="noopener"
+                          >W&amp;B</a
+                        >
+                      </td>
+                      <td>Experiment tracker</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <a
+                          href="https://huggingface.co/alphachu-volleyball"
+                          target="_blank"
+                          rel="noopener"
+                          >Hugging Face</a
+                        >
+                      </td>
+                      <td>Model deployments (ONNX)</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="about-grid-cell">
+                <p class="about-section-title thick">References</p>
+                <table class="references-table">
+                  <tbody>
+                    <tr>
+                      <td>
+                        <a
+                          href="https://github.com/gorisanson/pikachu-volleyball"
+                          target="_blank"
+                          rel="noopener"
+                          >gorisanson/pikachu-volleyball</a
+                        >
+                      </td>
+                      <td>JS reimplementation; game engine base</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <a
+                          href="https://github.com/helpingstar/pika-zoo"
+                          target="_blank"
+                          rel="noopener"
+                          >helpingstar/pika-zoo</a
+                        >
+                      </td>
+                      <td>RL env; obs/action interface base</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <a
+                          href="https://github.com/hankluo6/Pikachu-VolleyBall-RL"
+                          target="_blank"
+                          rel="noopener"
+                          >hankluo6/Pikachu-VolleyBall-RL</a
+                        >
+                      </td>
+                      <td>PPO/ES research; RL approach inspiration</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <a
+                          href="https://github.com/duckll/pikachu-volleyball"
+                          target="_blank"
+                          rel="noopener"
+                          >DuckLL/pikachu-volleyball</a
+                        >
+                      </td>
+                      <td>Rule-based AI; training opponent</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
           <div class="margin-top limit-width">
-            <p>
-              <span class="thick">Controls (default):</span><br />
-              Arrow keys + Space<br />
-              <span style="font-size: 0.85em"
-                >Change in Options &rarr; Keymap</span
-              >
-            </p>
-            <div class="nickname-input-container">
-              <label for="nickname-input"
-                >Nickname (maximum 8 characters)</label
-              >
-              <input
-                type="text"
-                id="nickname-input"
-                maxlength="8"
-                autocapitalize="none"
-                autocomplete="off"
-                autocorrect="off"
-                value="Player"
-              />
-            </div>
-            <div class="margin-top">
-              <button
-                type="button"
-                id="close-about-btn"
-                class="btn-in-box glow"
-              >
-                <span class="text-close hidden">close</span
-                ><span class="text-play">Play</span>
-              </button>
-            </div>
             <div class="for-margin"></div>
           </div>
         </div>

@@ -472,7 +472,6 @@ function setUpBtns(pikaVolley, applyAndSaveOptions) {
   }
 
   const aboutBox = document.getElementById('about-box');
-  const closeAboutBtn = document.getElementById('close-about-btn');
   aboutBtn.addEventListener('click', () => {
     if (aboutBox.classList.contains('hidden')) {
       aboutBox.classList.remove('hidden');
@@ -482,16 +481,6 @@ function setUpBtns(pikaVolley, applyAndSaveOptions) {
       optionsDropdownBtn.disabled = true;
       pauseResumeManager.pause(pikaVolley, PauseResumePrecedence.messageBox);
     } else {
-      aboutBox.classList.add('hidden');
-      // @ts-ignore
-      gameDropdownBtn.disabled = false;
-      // @ts-ignore
-      optionsDropdownBtn.disabled = false;
-      pauseResumeManager.resume(pikaVolley, PauseResumePrecedence.messageBox);
-    }
-  });
-  closeAboutBtn.addEventListener('click', () => {
-    if (!aboutBox.classList.contains('hidden')) {
       aboutBox.classList.add('hidden');
       // @ts-ignore
       gameDropdownBtn.disabled = false;
