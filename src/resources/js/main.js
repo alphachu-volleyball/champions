@@ -105,7 +105,6 @@ function setUpInitialUI() {
 
   const aboutBox = document.getElementById('about-box');
   const aboutBtn = document.getElementById('about-btn');
-  const closeAboutBtn = document.getElementById('close-about-btn');
   const gameDropdownBtn = document.getElementById('game-dropdown-btn');
   const optionsDropdownBtn = document.getElementById('options-dropdown-btn');
   // @ts-ignore
@@ -121,21 +120,12 @@ function setUpInitialUI() {
     aboutBtn.getElementsByClassName('text-play')[0].classList.add('hidden');
     aboutBtn.getElementsByClassName('text-about')[0].classList.remove('hidden');
     aboutBtn.classList.remove('glow');
-    closeAboutBtn
-      .getElementsByClassName('text-play')[0]
-      .classList.add('hidden');
-    closeAboutBtn
-      .getElementsByClassName('text-close')[0]
-      .classList.remove('hidden');
-    closeAboutBtn.classList.remove('glow');
 
     loader.load(setup); // setup is called after loader finishes loading
     loadingBox.classList.remove('hidden');
     aboutBtn.removeEventListener('click', closeAboutBox);
-    closeAboutBtn.removeEventListener('click', closeAboutBox);
   };
   aboutBtn.addEventListener('click', closeAboutBox);
-  closeAboutBtn.addEventListener('click', closeAboutBox);
 }
 
 /**

@@ -177,14 +177,14 @@ export function setUpUI(pikaVolley, ticker) {
   applyOptions(loadOptions());
 
   // Nickname input
+  // The About box (with the input) is visible before setUpUI runs.
+  // If the user typed something (DOM value differs from default "Player"),
+  // use that. Otherwise fall back to localStorage.
   const nicknameInput = document.getElementById('nickname-input');
+  const typedValue = nicknameInput.value.trim().slice(0, 8);
+  const userTyped = typedValue && typedValue !== 'Player';
   const savedNickname = localStorageWrapper.get('pv-offline-nickname');
-  // The input field may already contain a value typed before setUpUI ran
-  // (the About box is visible before setup). Prefer localStorage over the
-  // current DOM value so a previously-saved nickname isn't lost, but fall
-  // back to whatever the user typed in the initial About box.
-  const initialNickname =
-    savedNickname || nicknameInput.value.trim().slice(0, 8);
+  const initialNickname = userTyped ? typedValue : savedNickname || typedValue;
   if (initialNickname) {
     nicknameInput.value = initialNickname;
     pikaVolley.nickname = initialNickname || 'Player';
@@ -209,7 +209,10 @@ export function setUpUI(pikaVolley, ticker) {
         menuBar.classList.add('hidden');
       }
       event.preventDefault();
-    } else if (event.code === 'Space') {
+    } else if (
+      event.code === 'Space' &&
+      !(event.target instanceof HTMLInputElement)
+    ) {
       const aboutBox = document.getElementById('about-box');
       if (aboutBox.classList.contains('hidden')) {
         event.preventDefault();
@@ -472,26 +475,23 @@ function setUpBtns(pikaVolley, applyAndSaveOptions) {
   }
 
   const aboutBox = document.getElementById('about-box');
-  const closeAboutBtn = document.getElementById('close-about-btn');
   aboutBtn.addEventListener('click', () => {
     if (aboutBox.classList.contains('hidden')) {
       aboutBox.classList.remove('hidden');
+      // Disable nickname input once a game has started
+      const gameStarted =
+        pikaVolley.state !== pikaVolley.intro &&
+        pikaVolley.state !== pikaVolley.menu &&
+        pikaVolley.state !== pikaVolley.modeSelect &&
+        pikaVolley.state !== pikaVolley.modelSelect &&
+        pikaVolley.state !== pikaVolley.sideSelect;
+      document.getElementById('nickname-input').disabled = gameStarted;
       // @ts-ignore
       gameDropdownBtn.disabled = true;
       // @ts-ignore
       optionsDropdownBtn.disabled = true;
       pauseResumeManager.pause(pikaVolley, PauseResumePrecedence.messageBox);
     } else {
-      aboutBox.classList.add('hidden');
-      // @ts-ignore
-      gameDropdownBtn.disabled = false;
-      // @ts-ignore
-      optionsDropdownBtn.disabled = false;
-      pauseResumeManager.resume(pikaVolley, PauseResumePrecedence.messageBox);
-    }
-  });
-  closeAboutBtn.addEventListener('click', () => {
-    if (!aboutBox.classList.contains('hidden')) {
       aboutBox.classList.add('hidden');
       // @ts-ignore
       gameDropdownBtn.disabled = false;

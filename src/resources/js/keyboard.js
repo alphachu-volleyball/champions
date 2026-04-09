@@ -201,6 +201,7 @@ class Key {
    * @param {KeyboardEvent} event
    */
   downHandler(event) {
+    if (event.target instanceof HTMLInputElement) return;
     if (event.code === this.value) {
       this.isDown = true;
       this.isUp = false;
@@ -213,6 +214,7 @@ class Key {
    * @param {KeyboardEvent} event
    */
   upHandler(event) {
+    if (event.target instanceof HTMLInputElement) return;
     if (event.code === this.value) {
       this.isDown = false;
       this.isUp = true;
