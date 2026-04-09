@@ -250,10 +250,7 @@ export class PikachuVolleyball {
       this.physics.player2.gameEnded = false;
       this.physics.player2.isWinner = false;
 
-      this.view.game.setPlayerSkins(
-        this.physics.player1.isComputer,
-        this.physics.player2.isComputer,
-      );
+      this._setupSkins();
       this._setupAI();
       this._updateNicknameDisplay();
 
@@ -710,6 +707,22 @@ export class PikachuVolleyball {
    * Assembles userInputArray based on mode (play vs watch).
    * Must be called BEFORE isComputer is modified for ONNX.
    */
+  _setupSkins() {
+    if (this._watchMode) {
+      const p1Skin = (this._watchP1Model && this._watchP1Model.skin) || 'white';
+      const p2Skin = (this._watchP2Model && this._watchP2Model.skin) || 'white';
+      this.view.game.setPlayerSkins(p1Skin, p2Skin);
+    } else {
+      const modelSkin =
+        (this._selectedModelEntry && this._selectedModelEntry.skin) || 'white';
+      const humanIsP1 = !this.physics.player1.isComputer;
+      this.view.game.setPlayerSkins(
+        humanIsP1 ? 'yellow' : modelSkin,
+        humanIsP1 ? modelSkin : 'yellow',
+      );
+    }
+  }
+
   _setupAI() {
     this.onnxAI.reset();
     if (this._onnxAI2) this._onnxAI2.reset();

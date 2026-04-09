@@ -454,6 +454,7 @@ export class GameView {
     this.player2 = playerData.sprites[1];
     this._yellowTextures = playerData.yellowTextures;
     this._whiteTextures = playerData.whiteTextures;
+    this._orangeTextures = playerData.orangeTextures;
     this.ball = makeBallAnimatedSprites(textures);
     this.ballHyper = makeSpriteWithAnchorXY(
       textures,
@@ -570,18 +571,24 @@ export class GameView {
   }
 
   /**
-   * Set player skins based on which player is computer.
-   * Computer gets white pikachu, human gets yellow.
-   * @param {boolean} isPlayer1Computer
-   * @param {boolean} isPlayer2Computer
+   * Set player skins by name.
+   * @param {string} p1Skin 'yellow', 'white', or 'orange'
+   * @param {string} p2Skin 'yellow', 'white', or 'orange'
    */
-  setPlayerSkins(isPlayer1Computer, isPlayer2Computer) {
-    this.player1.textures = isPlayer1Computer
-      ? this._whiteTextures
-      : this._yellowTextures;
-    this.player2.textures = isPlayer2Computer
-      ? this._whiteTextures
-      : this._yellowTextures;
+  setPlayerSkins(p1Skin, p2Skin) {
+    this.player1.textures = this._getSkinTextures(p1Skin);
+    this.player2.textures = this._getSkinTextures(p2Skin);
+  }
+
+  _getSkinTextures(skin) {
+    switch (skin) {
+      case 'white':
+        return this._whiteTextures;
+      case 'orange':
+        return this._orangeTextures;
+      default:
+        return this._yellowTextures;
+    }
   }
 
   /** @typedef {import("./physics").PikaPhysics} PikaPhysics */
@@ -953,13 +960,17 @@ function buildPlayerTextureArray(textures, textureFn) {
 /**
  * Make animated sprites for both players
  * @param {Object.<string,Texture>} textures
- * @return {{sprites: AnimatedSprite[], yellowTextures: Texture[], whiteTextures: Texture[]}}
+ * @return {{sprites: AnimatedSprite[], yellowTextures: Texture[], whiteTextures: Texture[], orangeTextures: Texture[]}}
  */
 function makePlayerAnimatedSprites(textures) {
   const yellowTextures = buildPlayerTextureArray(textures, TEXTURES.PIKACHU);
   const whiteTextures = buildPlayerTextureArray(
     textures,
     TEXTURES.PIKACHU_WHITE,
+  );
+  const orangeTextures = buildPlayerTextureArray(
+    textures,
+    TEXTURES.PIKACHU_ORANGE,
   );
 
   // Both start with yellow; swapped at game start based on who is computer
@@ -975,6 +986,7 @@ function makePlayerAnimatedSprites(textures) {
     sprites: [player1AnimatedSprite, player2AnimatedSprite],
     yellowTextures,
     whiteTextures,
+    orangeTextures,
   };
 }
 
