@@ -1,11 +1,20 @@
 # champions
 
+[![Release](https://img.shields.io/github/v/release/alphachu-volleyball/champions?label=release&logo=github)](https://github.com/alphachu-volleyball/champions/releases)
+
 Web demo for [alphachu-volleyball](https://github.com/alphachu-volleyball) — play against RL-trained AI in your browser.
 
 > **Original game**: Pikachu Volleyball (対戦ぴかちゅ～　ﾋﾞｰﾁﾊﾞﾚｰ編)
 > — 1997 (C) SACHI SOFT / SAWAYAKAN Programmers, Satoshi Takenouchi
 >
 > **Reverse-engineered JS**: [gorisanson/pikachu-volleyball](https://github.com/gorisanson/pikachu-volleyball)
+
+| | |
+|:---:|:---:|
+| **Main** | **Play** |
+| ![Main](https://github.com/user-attachments/assets/6d2a1879-a1ef-4693-bc0a-98bfe00e88e2) | ![Play](https://github.com/user-attachments/assets/19a66ace-47db-4411-bc81-0a035f89830d) |
+| **Watch** | **About** |
+| ![Watch](https://github.com/user-attachments/assets/be892a6e-eccb-4998-967c-c64dbe2d95cd) | ![About](https://github.com/user-attachments/assets/8ed435a1-47b6-4383-8591-79e955b11186) |
 
 ## Overview
 
