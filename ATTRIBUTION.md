@@ -18,4 +18,6 @@
 - Removed embedded-in-other-website detection
 - Simplified HTML to single page
 - Simplified Webpack config (single entry, no code splitting)
-- Will replace built-in AI with ONNX Runtime Web inference (planned)
+- Added ONNX Runtime Web inference to replace built-in AI
+- ONNX AI runs before physics step to match pika-zoo observation timing (see [pika-zoo#49](https://github.com/alphachu-volleyball/pika-zoo/pull/49))
+- Built-in AI timing unchanged (runs inside physics step as in original game)

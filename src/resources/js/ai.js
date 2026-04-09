@@ -303,8 +303,9 @@ export class OnnxAI {
    * @param {object} humanPlayer physics.js player object for the human
    * @param {object} ball physics.js ball object
    * @param {object} userInput PikaUserInput to fill with the decision
+   * @param {object} [humanKeyboard] human player's keyboard for tracking power hit
    */
-  async decide(aiPlayer, humanPlayer, ball, userInput) {
+  async decide(aiPlayer, humanPlayer, ball, userInput, humanKeyboard) {
     if (!this.loaded) return;
 
     const isPlayer2 = aiPlayer.isPlayer2;
@@ -348,6 +349,14 @@ export class OnnxAI {
     userInput.xDirection = decoded.xDirection;
     userInput.yDirection = decoded.yDirection;
     userInput.powerHit = decoded.powerHit;
+
+    // Update prev power hit tracking for next frame's observation
     this._prevPowerHit = decoded.rawPowerHit;
+    this._prevSelfPowerHit = decoded.rawPowerHit;
+    if (humanKeyboard) {
+      this._prevOpponentPowerHit = humanKeyboard.powerHitKeyIsDownPrevious
+        ? 1
+        : 0;
+    }
   }
 }

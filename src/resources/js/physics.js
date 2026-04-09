@@ -77,14 +77,6 @@ export class PikaPhysics {
     this.player1 = new Player(false, isPlayer1Computer);
     this.player2 = new Player(true, isPlayer2Computer);
     this.ball = new Ball(false);
-
-    /**
-     * Optional external AI callback. When set, called instead of
-     * the built-in letComputerDecideUserInput for computer players.
-     * Signature: (player, ball, theOtherPlayer, userInput) => void
-     * @type {function|null}
-     */
-    this.externalAICallback = null;
   }
 
   /**
@@ -93,15 +85,8 @@ export class PikaPhysics {
    * @param {PikaUserInput[]} userInputArray userInputArray[0]: PikaUserInput object for player 1, userInputArray[1]: PikaUserInput object for player 2
    * @return {boolean} Is ball touching ground?
    */
-  async runEngineForNextFrame(userInputArray) {
-    const isBallTouchingGround = await physicsEngine(
-      this.player1,
-      this.player2,
-      this.ball,
-      userInputArray,
-      this.externalAICallback,
-    );
-    return isBallTouchingGround;
+  runEngineForNextFrame(userInputArray) {
+    return physicsEngine(this.player1, this.player2, this.ball, userInputArray);
   }
 }
 
@@ -309,13 +294,7 @@ class Ball {
  * @param {PikaUserInput[]} userInputArray userInputArray[0]: user input for player 1, userInputArray[1]: user input for player 2
  * @return {boolean} Is ball touching ground?
  */
-async function physicsEngine(
-  player1,
-  player2,
-  ball,
-  userInputArray,
-  externalAICallback,
-) {
+function physicsEngine(player1, player2, ball, userInputArray) {
   const isBallTouchingGround =
     processCollisionBetweenBallAndWorldAndSetBallPosition(ball);
 
@@ -337,12 +316,11 @@ async function physicsEngine(
     // FUN_00402d90 include FUN_004031b0(calculateExpectedLandingPointXFor)
     calculateExpectedLandingPointXFor(ball); // calculate expected_X;
 
-    await processPlayerMovementAndSetPlayerPosition(
+    processPlayerMovementAndSetPlayerPosition(
       player,
       userInputArray[i],
       theOtherPlayer,
       ball,
-      externalAICallback,
     );
 
     // FUN_00402830 omitted
@@ -509,19 +487,14 @@ function processCollisionBetweenBallAndWorldAndSetBallPosition(ball) {
  * @param {Player} theOtherPlayer
  * @param {Ball} ball
  */
-async function processPlayerMovementAndSetPlayerPosition(
+function processPlayerMovementAndSetPlayerPosition(
   player,
   userInput,
   theOtherPlayer,
   ball,
-  externalAICallback,
 ) {
   if (player.isComputer === true) {
-    if (externalAICallback) {
-      await externalAICallback(player, ball, theOtherPlayer, userInput);
-    } else {
-      letComputerDecideUserInput(player, ball, theOtherPlayer, userInput);
-    }
+    letComputerDecideUserInput(player, ball, theOtherPlayer, userInput);
   }
 
   // if player is lying down.. don't move

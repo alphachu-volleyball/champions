@@ -28,7 +28,7 @@ graph LR
 ```
 
 1. [training-center](https://github.com/alphachu-volleyball/training-center) trains RL models and exports them as ONNX
-2. world-tournament fetches the ONNX model from GitHub Releases
+2. world-tournament fetches the ONNX model from [Hugging Face Hub](https://huggingface.co/alphachu-volleyball)
 3. When a user opens the page, ONNX Runtime Web loads the model and runs it as the AI player
 
 ## Quick Start
