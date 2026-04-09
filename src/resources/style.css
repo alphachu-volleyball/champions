@@ -383,6 +383,11 @@ p.update-history-on {
   margin: 0 0 0.3em;
   text-align: center;
 }
+.about-section-subtitle {
+  font-size: 0.7em;
+  font-weight: normal;
+  opacity: 0.7;
+}
 .about-grid-cell-center {
   text-align: center;
 }
