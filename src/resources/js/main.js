@@ -165,12 +165,12 @@ function start(pikaVolley) {
 }
 
 /**
- * Load the default AI model from models/manifest.json.
+ * Load the default AI model from manifest.json.
  * @param {PikachuVolleyball} pikaVolley
  */
 async function loadModelFromManifest(pikaVolley) {
   try {
-    const resp = await fetch('models/manifest.json');
+    const resp = await fetch('manifest.json');
     if (!resp.ok) throw new Error(`manifest fetch failed: ${resp.status}`);
     const manifest = await resp.json();
 

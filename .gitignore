@@ -19,10 +19,5 @@ build/
 .DS_Store
 Thumbs.db
 
-# Models (fetched at runtime, not committed)
-models/*.onnx
-models/*.json
-!models/manifest.json
-
 # Debug logs
 npm-debug.log*

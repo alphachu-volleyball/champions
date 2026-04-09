@@ -24,11 +24,7 @@ module.exports = {
           from: 'node_modules/onnxruntime-web/dist/*.wasm',
           to: '[name][ext]',
         },
-        {
-          from: 'models/*.{onnx,json}',
-          to: 'models/[name][ext]',
-          noErrorOnMissing: true,
-        },
+        { from: 'src/manifest.json', to: 'manifest.json' },
       ],
     }),
     new HtmlWebpackPlugin({
