@@ -138,6 +138,7 @@ export class MenuView {
           sprite.visible = false;
         }
         if (sel.titleSprite) sel.titleSprite.visible = false;
+        if (sel.hintSprite) sel.hintSprite.visible = false;
       }
     }
     if (this._loadingSprite) {
@@ -289,9 +290,10 @@ export class MenuView {
    * @param {Array<{label: string, color?: string}>} options
    * @param {number} defaultIdx initially selected index
    * @param {string} [title] optional title shown above options (dark, non-selectable)
+   * @param {string} [hint] optional hint shown below options (small, dark)
    */
-  setupSelector(key, options, defaultIdx, title) {
-    // Remove previous sprites and title for this key
+  setupSelector(key, options, defaultIdx, title, hint) {
+    // Remove previous sprites and title/hint for this key
     const prevSel = this._selectors && this._selectors[key];
     if (prevSel) {
       for (const sprite of prevSel.sprites) {
@@ -299,6 +301,9 @@ export class MenuView {
       }
       if (prevSel.titleSprite) {
         this.container.removeChild(prevSel.titleSprite);
+      }
+      if (prevSel.hintSprite) {
+        this.container.removeChild(prevSel.hintSprite);
       }
     }
     // Hide all other selectors
@@ -308,6 +313,7 @@ export class MenuView {
           sprite.visible = false;
         }
         if (sel.titleSprite) sel.titleSprite.visible = false;
+        if (sel.hintSprite) sel.hintSprite.visible = false;
       }
     }
 
@@ -328,9 +334,17 @@ export class MenuView {
       return sprite;
     });
 
+    let hintSprite = null;
+    if (hint) {
+      hintSprite = new Sprite(makeTextTexture(hint, 160, 16, '#444444'));
+      this.container.addChild(hintSprite);
+      hintSprite.visible = false;
+    }
+
     this._selectors[key] = {
       sprites,
       titleSprite,
+      hintSprite,
       selected: defaultIdx,
       sizeIncrement: 2,
     };
@@ -371,6 +385,13 @@ export class MenuView {
       sprites[i].y = topY + 30 * i - halfHeightIncrement;
       sprites[i].width = w + 2 * halfWidthIncrement;
       sprites[i].height = h + 2 * halfHeightIncrement;
+    }
+
+    if (sel.hintSprite) {
+      sel.hintSprite.visible = true;
+      const hw = sel.hintSprite.texture.width;
+      sel.hintSprite.x = 216 - hw / 2;
+      sel.hintSprite.y = topY + 30 * sprites.length - 4;
     }
   }
 

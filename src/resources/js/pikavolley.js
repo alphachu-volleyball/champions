@@ -547,6 +547,7 @@ export class PikachuVolleyball {
       options,
       defaultIdx >= 0 ? defaultIdx : 0,
       title,
+      'Backspace: back',
     );
     this.state = this.modelSelect;
   }
@@ -558,6 +559,19 @@ export class PikachuVolleyball {
   async modelSelect() {
     this._navigateSelector('model', this._modelEnabled);
     this.view.menu.drawSelector('model');
+
+    if (this.humanKeyboard.cancel === 1) {
+      this.audio.sounds.pi.play();
+      if (this._isWatchMode && this._watchP1Model) {
+        // Go back from P2 pick to P1 pick
+        this._watchP1Model = null;
+        this._watchP1AI = null;
+        this._showModelSelect('player 1');
+      } else {
+        this._showModeSelect();
+      }
+      return;
+    }
 
     if (this.humanKeyboard.powerHit === 1) {
       const model = this.availableModels[this.view.menu.getSelected('model')];
@@ -645,7 +659,13 @@ export class PikachuVolleyball {
       },
     ];
     const defaultSide = humanLeftEnabled ? 0 : 1;
-    this.view.menu.setupSelector('side', options, defaultSide, 'Pick side');
+    this.view.menu.setupSelector(
+      'side',
+      options,
+      defaultSide,
+      'Pick side',
+      'Backspace: back',
+    );
     this._sideEnabled = [humanLeftEnabled, humanRightEnabled];
     this._watchMode = false;
     this.state = this.sideSelect;
@@ -658,6 +678,12 @@ export class PikachuVolleyball {
   sideSelect() {
     this._navigateSelector('side', this._sideEnabled);
     this.view.menu.drawSelector('side');
+
+    if (this.humanKeyboard.cancel === 1) {
+      this.audio.sounds.pi.play();
+      this._showModelSelect(null);
+      return;
+    }
 
     if (this.humanKeyboard.powerHit === 1) {
       const selected = this.view.menu.getSelected('side');
