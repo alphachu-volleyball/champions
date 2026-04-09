@@ -1,8 +1,13 @@
 {
   "models": [
     {
+      "name": "Alphachu v1",
       "url": "https://huggingface.co/alphachu-volleyball/alphachu-v1/resolve/main/model.onnx",
       "config": "https://huggingface.co/alphachu-volleyball/alphachu-v1/resolve/main/model.json"
+    },
+    {
+      "name": "Builtin",
+      "builtin": true
     }
   ],
   "default": 0

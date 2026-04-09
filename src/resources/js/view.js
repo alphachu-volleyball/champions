@@ -140,6 +140,14 @@ export class MenuView {
     for (const prop in this.messages) {
       this.messages[prop].visible = false;
     }
+    if (this._modelSprites) {
+      for (const sprite of this._modelSprites) {
+        sprite.visible = false;
+      }
+    }
+    if (this._loadingSprite) {
+      this._loadingSprite.visible = false;
+    }
   }
 
   /**
@@ -320,6 +328,113 @@ export class MenuView {
   selectWithWho(i) {
     this.selectedWithWho = i;
     this.selectedWithWhoMessageSizeIncrement = 2;
+  }
+
+  /**
+   * Set up model selection sprites from a list of model entries.
+   * @param {Array} models array of {name, builtin?, ...}
+   * @param {number} defaultIdx index of the default model
+   */
+  setupModelSelect(models, defaultIdx) {
+    // Remove previous model sprites
+    if (this._modelSprites) {
+      for (const sprite of this._modelSprites) {
+        this.container.removeChild(sprite);
+      }
+    }
+
+    this._modelSprites = models.map((m, i) => {
+      const color = i === defaultIdx ? '#ffffff' : '#cccccc';
+      const sprite = new Sprite(
+        makeTextTexture(m.name || `Model ${i}`, 160, 20, color),
+      );
+      this.container.addChild(sprite);
+      sprite.visible = false;
+      return sprite;
+    });
+
+    // Add loading text sprite
+    if (this._loadingSprite) {
+      this.container.removeChild(this._loadingSprite);
+    }
+    this._loadingSprite = new Sprite(makeTextTexture('Loading...', 120, 20));
+    this.container.addChild(this._loadingSprite);
+    this._loadingSprite.visible = false;
+
+    this._selectedModel = defaultIdx;
+    this._selectedModelSizeIncrement = 2;
+  }
+
+  /**
+   * Draw model selection options.
+   */
+  drawModelSelectMessages() {
+    const sprites = this._modelSprites;
+    if (!sprites || sprites.length === 0) return;
+
+    const w = sprites[0].texture.width;
+    const h = sprites[0].texture.height;
+
+    if (this._selectedModelSizeIncrement < 10) {
+      this._selectedModelSizeIncrement += 1;
+    }
+
+    for (let i = 0; i < sprites.length; i++) {
+      const selected = Number(this._selectedModel === i);
+      const halfWidthIncrement =
+        selected * (this._selectedModelSizeIncrement + 2);
+      const halfHeightIncrement = selected * this._selectedModelSizeIncrement;
+
+      sprites[i].visible = true;
+      sprites[i].x = 216 - w / 2 - halfWidthIncrement;
+      sprites[i].y = 184 + 30 * i - halfHeightIncrement;
+      sprites[i].width = w + 2 * halfWidthIncrement;
+      sprites[i].height = h + 2 * halfHeightIncrement;
+    }
+  }
+
+  /**
+   * Select a model option for the size animation.
+   * @param {number} i index
+   */
+  selectModel(i) {
+    this._selectedModel = i;
+    this._selectedModelSizeIncrement = 2;
+  }
+
+  /**
+   * Hide model select sprites and show loading text.
+   */
+  showModelLoading() {
+    if (this._modelSprites) {
+      for (const sprite of this._modelSprites) {
+        sprite.visible = false;
+      }
+    }
+    if (this._loadingSprite) {
+      this._loadingSprite.visible = true;
+      this._loadingSprite.x = 216 - this._loadingSprite.texture.width / 2;
+      this._loadingSprite.y = 200;
+    }
+  }
+
+  /**
+   * Hide model loading text.
+   */
+  hideModelLoading() {
+    if (this._loadingSprite) {
+      this._loadingSprite.visible = false;
+    }
+  }
+
+  /** @return {number} selected model index */
+  get selectedModel() {
+    return this._selectedModel;
+  }
+
+  /** @return {number} number of model options */
+  get modelCount() {
+    return this._modelSprites ? this._modelSprites.length : 0;
   }
 }
 

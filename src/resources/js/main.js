@@ -145,8 +145,8 @@ function setup() {
   const pikaVolley = new PikachuVolleyball(stage, loader.resources);
   setUpUI(pikaVolley, ticker);
 
-  // Load AI model from manifest (non-blocking — falls back to built-in AI)
-  loadModelFromManifest(pikaVolley);
+  // Load model manifest (non-blocking)
+  loadManifest(pikaVolley);
 
   start(pikaVolley);
 }
@@ -165,21 +165,20 @@ function start(pikaVolley) {
 }
 
 /**
- * Load the default AI model from manifest.json.
+ * Load model manifest and populate available models list.
  * @param {PikachuVolleyball} pikaVolley
  */
-async function loadModelFromManifest(pikaVolley) {
+async function loadManifest(pikaVolley) {
   try {
     const resp = await fetch('manifest.json');
     if (!resp.ok) throw new Error(`manifest fetch failed: ${resp.status}`);
     const manifest = await resp.json();
-
-    const entry = manifest.models[manifest.default || 0];
-    if (!entry) throw new Error('no models in manifest');
-
-    await pikaVolley.onnxAI.load(entry.url, entry.config);
-    console.log(`AI model loaded: ${pikaVolley.onnxAI.modelName}`);
+    const defaultIdx = manifest.default || 0;
+    pikaVolley.availableModels = manifest.models.map((m, i) => ({
+      ...m,
+      _manifestDefault: i === defaultIdx,
+    }));
   } catch (err) {
-    console.warn('No AI model loaded, using built-in AI:', err.message);
+    console.warn('No manifest loaded:', err.message);
   }
 }

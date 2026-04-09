@@ -107,6 +107,9 @@ export class PikachuVolleyball {
     /** @type {OnnxAI} ONNX model AI */
     this.onnxAI = new OnnxAI();
 
+    /** @type {Array} available models from manifest.json */
+    this.availableModels = [];
+
     /**
      * The game state which is being rendered now
      * @type {GameState}
@@ -217,9 +220,8 @@ export class PikachuVolleyball {
       this.physics.player1.isComputer = true;
       this.physics.player2.isComputer = false;
       this.audio.sounds.pikachu.play();
-      this.frameCounter = 0;
-      this.noInputFrameCounter = 0;
-      this.state = this.afterMenuSelection;
+      this.paused = true;
+      this._showModelSelect();
       return;
     }
 
@@ -498,6 +500,83 @@ export class PikachuVolleyball {
     this.view.game.visible = false;
     document.getElementById('nicknames-container').classList.add('hidden');
     this.state = this.intro;
+  }
+
+  /**
+   * Set up and transition to model selection state.
+   */
+  _showModelSelect() {
+    const models = this.availableModels;
+    if (models.length === 0) {
+      this.frameCounter = 0;
+      this.noInputFrameCounter = 0;
+      this.paused = false;
+      this.state = this.afterMenuSelection;
+      return;
+    }
+
+    const defaultIdx = models.findIndex((m) => m._manifestDefault);
+    this.view.menu.setupModelSelect(models, defaultIdx >= 0 ? defaultIdx : 0);
+    // Hide side selection sprites
+    for (const sprite of this.view.menu.messages.withWho) {
+      sprite.visible = false;
+    }
+    this.paused = false;
+    this.state = this.modelSelect;
+  }
+
+  /**
+   * Model selection: choose which AI model to play against.
+   * @type {GameState}
+   */
+  async modelSelect() {
+    this.view.menu.drawModelSelectMessages();
+
+    if (
+      this.keyboardArray[0].yDirection === -1 ||
+      this.keyboardArray[1].yDirection === -1
+    ) {
+      const cur = this.view.menu.selectedModel;
+      if (cur > 0) {
+        this.view.menu.selectModel(cur - 1);
+        this.audio.sounds.pi.play();
+      }
+    } else if (
+      this.keyboardArray[0].yDirection === 1 ||
+      this.keyboardArray[1].yDirection === 1
+    ) {
+      const cur = this.view.menu.selectedModel;
+      if (cur < this.view.menu.modelCount - 1) {
+        this.view.menu.selectModel(cur + 1);
+        this.audio.sounds.pi.play();
+      }
+    }
+
+    if (
+      this.keyboardArray[0].powerHit === 1 ||
+      this.keyboardArray[1].powerHit === 1
+    ) {
+      const model = this.availableModels[this.view.menu.selectedModel];
+      this.view.menu.showModelLoading();
+
+      try {
+        if (model && model.builtin) {
+          this.onnxAI = new OnnxAI();
+        } else if (model && model.url) {
+          this.onnxAI = new OnnxAI();
+          await this.onnxAI.load(model.url, model.config);
+          console.log(`AI model loaded: ${this.onnxAI.modelName}`);
+        }
+      } catch (err) {
+        console.warn('Model load failed, using built-in AI:', err.message);
+        this.onnxAI = new OnnxAI();
+      }
+
+      this.view.menu.hideModelLoading();
+      this.frameCounter = 0;
+      this.noInputFrameCounter = 0;
+      this.state = this.afterMenuSelection;
+    }
   }
 
   /**
