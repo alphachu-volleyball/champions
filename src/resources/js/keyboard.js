@@ -48,6 +48,12 @@ export class PikaKeyboard extends PikaUserInput {
 
     /** @type {boolean} */
     this.powerHitKeyIsDownPrevious = false;
+    /** @type {number} rising edge: 1 on press, 0 otherwise */
+    this.cancel = 0;
+    /** @type {boolean} */
+    this._cancelKeyIsDownPrevious = false;
+    /** @type {Key} */
+    this._cancelKey = new Key('Backspace');
 
     /** @type {string} */
     this.presetName = presetName;
@@ -125,6 +131,14 @@ export class PikaKeyboard extends PikaUserInput {
       this.powerHit = 0;
     }
     this.powerHitKeyIsDownPrevious = isDown;
+
+    const cancelDown = this._cancelKey.isDown;
+    if (!this._cancelKeyIsDownPrevious && cancelDown) {
+      this.cancel = 1;
+    } else {
+      this.cancel = 0;
+    }
+    this._cancelKeyIsDownPrevious = cancelDown;
   }
 
   /**
@@ -207,9 +221,11 @@ class Key {
   }
 
   /**
-   * Subscribe event listeners
+   * Subscribe event listeners (safe to call multiple times)
    */
   subscribe() {
+    window.removeEventListener('keydown', this.downListener);
+    window.removeEventListener('keyup', this.upListener);
     window.addEventListener('keyup', this.upListener);
     window.addEventListener('keydown', this.downListener);
   }

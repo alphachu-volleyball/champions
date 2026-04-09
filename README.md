@@ -23,13 +23,22 @@ graph LR
     WT["🌐 world-tournament<br>Game Engine + ONNX Runtime Web"]
     USER["🎮 Player"]
 
-    TC -- "ONNX model<br>(GitHub Releases)" --> WT
+    TC -- "ONNX model<br>(Hugging Face)" --> WT
     USER -- "keyboard input" --> WT
 ```
 
 1. [training-center](https://github.com/alphachu-volleyball/training-center) trains RL models and exports them as ONNX
 2. world-tournament fetches the ONNX model from [Hugging Face Hub](https://huggingface.co/alphachu-volleyball)
 3. When a user opens the page, ONNX Runtime Web loads the model and runs it as the AI player
+
+### AI Opponents
+
+| AI | Side | Skin | Description |
+|----|------|------|-------------|
+| **Alphachu v1** | Left (P1) only | `#ffffff` white | RL-trained PPO model ([Hugging Face](https://huggingface.co/alphachu-volleyball/alphachu-v1)) |
+| **Builtin** | Left or Right | `#ff8c00` orange | Original game heuristic AI |
+
+Two modes: **Play** (human vs AI) and **Watch** (AI vs AI). Human player appears as `#ffff00` yellow pikachu.
 
 ## Quick Start
 

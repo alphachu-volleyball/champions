@@ -121,8 +121,7 @@ export function setUpUI(pikaVolley, ticker) {
         break;
     }
     if (options.keymap) {
-      pikaVolley.keyboardArray[0].switchPreset(options.keymap);
-      pikaVolley.keyboardArray[1].switchPreset(options.keymap);
+      pikaVolley.humanKeyboard.switchPreset(options.keymap);
     }
   };
 

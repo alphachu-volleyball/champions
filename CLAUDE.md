@@ -20,7 +20,7 @@ alphachu-volleyball/
 └── vs-recorder           ← Replay analysis (future)
 ```
 
-- **Upstream**: training-center (ONNX models via GitHub Releases)
+- **Upstream**: training-center (ONNX models via [Hugging Face Hub](https://huggingface.co/alphachu-volleyball))
 - **Downstream**: none — this is the end-user facing product
 
 ### Tech Stack
@@ -105,6 +105,33 @@ Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`
 - `src/manifest.json` lists available models with Hugging Face URLs
 - Models are loaded at runtime via ONNX Runtime Web
 - Models are NOT committed to Git
+
+### Available AI Opponents
+
+| AI | Side | Skin | Source |
+|----|------|------|--------|
+| **Alphachu v1** | Left (P1) only | `#ffffff` white | [Hugging Face](https://huggingface.co/alphachu-volleyball/alphachu-v1) |
+| **Builtin** | Left or Right | `#ff8c00` orange | Original game heuristic AI |
+
+- Human player renders as `#ffff00` yellow pikachu
+- AI skin is configured per model in `src/manifest.json` (`skin` field)
+- `sides` field in manifest = sides the **model** can play on
+- Menu flow: **mode select** (Play/Watch) → **model select** → **side select** (Play) or **P1/P2 model select** (Watch)
+- Backspace navigates back through menu steps
+
+### Actor Types and Input Architecture
+
+Three actor types exist, each with a different input mechanism:
+
+| Actor | Input source | Action | Observation | Timing |
+|-------|-------------|--------|-------------|--------|
+| **Human** | `humanKeyboard` (PikaKeyboard, key events) | N/A (direct key state) | N/A | gameLoop reads key state |
+| **Builtin AI** | `letComputerDecideUserInput()` in physics.js | Directly sets xDirection/yDirection/powerHit | Reads ball/player state internally | Inside physics step (original game timing) |
+| **ONNX model** | `aiInput` (PikaUserInput, written by ai.js) | model.json `action_simplified`: 13 relative or 18 absolute → decoded | model.json `observation_simplified`/`observation_normalized`: mirror + normalize as configured | Before physics step (pika-zoo timing) |
+
+`humanKeyboard` and `aiInput` are assembled into `userInputArray = [P1 input, P2 input]` by `_setupAI()` based on which side the human chose. This decouples input from position — no subscribe/unsubscribe management needed.
+
+When ONNX model is loaded, `isComputer` is set to `false` for the AI player so the built-in AI doesn't run. The side assignment is stored separately in `_humanIsP1` to avoid confusion after `isComputer` is modified.
 
 ### Observation Timing
 

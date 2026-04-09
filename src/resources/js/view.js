@@ -86,10 +86,6 @@ export class MenuView {
         0,
         0,
       ),
-      withWho: [
-        new Sprite(makeTextTexture('Play as Right')),
-        new Sprite(makeTextTexture('Play as Left', 120, 20, '#888888')),
-      ],
       sachisoft: makeSpriteWithAnchorXY(textures, TEXTURES.SACHISOFT, 0, 0),
       fight: makeSpriteWithAnchorXY(textures, TEXTURES.FIGHT, 0, 0),
     };
@@ -110,15 +106,11 @@ export class MenuView {
     this.container.addChild(this.sittingPikachuTilesContainer);
     this.container.addChild(this.messages.pokemon);
     this.container.addChild(this.messages.pikachuVolleyball);
-    this.container.addChild(this.messages.withWho[0]);
-    this.container.addChild(this.messages.withWho[1]);
     this.container.addChild(this.messages.sachisoft);
     this.container.addChild(this.messages.fight);
     this.initializeVisibles();
 
     this.sittingPikachuTilesDisplacement = 0;
-    this.selectedWithWho = -1; // 0: with computer, 1: with friend, -1: not selected
-    this.selectedWithWhoMessageSizeIncrement = 2;
   }
 
   /** @return {boolean} Is visible? */
@@ -139,6 +131,18 @@ export class MenuView {
   initializeVisibles() {
     for (const prop in this.messages) {
       this.messages[prop].visible = false;
+    }
+    if (this._selectors) {
+      for (const sel of Object.values(this._selectors)) {
+        for (const sprite of sel.sprites) {
+          sprite.visible = false;
+        }
+        if (sel.titleSprite) sel.titleSprite.visible = false;
+        if (sel.hintSprite) sel.hintSprite.visible = false;
+      }
+    }
+    if (this._loadingSprite) {
+      this._loadingSprite.visible = false;
     }
   }
 
@@ -276,50 +280,180 @@ export class MenuView {
     }
   }
 
-  /**
-   * referred to FUN_00405ec0
-   * Draw with who messages (with computer or with friend) as frame goes
-   * @param {number} frameCounter
-   */
-  drawWithWhoMessages(frameCounter) {
-    const withWho = this.messages.withWho;
-    const w = withWho[0].texture.width;
-    const h = withWho[0].texture.height;
+  // ---------------------------------------------------------------
+  // Generic menu selector (used for mode, model, and side selection)
+  // ---------------------------------------------------------------
 
-    if (frameCounter === 0) {
-      for (let i = 0; i < 2; i++) {
-        withWho[i].visible = false;
+  /**
+   * Set up a menu selector with labeled options.
+   * @param {string} key unique key for this selector (e.g. 'mode', 'model', 'side')
+   * @param {Array<{label: string, color?: string}>} options
+   * @param {number} defaultIdx initially selected index
+   * @param {string} [title] optional title shown above options (dark, non-selectable)
+   * @param {string} [hint] optional hint shown below options (small, dark)
+   */
+  setupSelector(key, options, defaultIdx, title, hint) {
+    // Remove previous sprites and title/hint for this key
+    const prevSel = this._selectors && this._selectors[key];
+    if (prevSel) {
+      for (const sprite of prevSel.sprites) {
+        this.container.removeChild(sprite);
       }
-      return;
+      if (prevSel.titleSprite) {
+        this.container.removeChild(prevSel.titleSprite);
+      }
+      if (prevSel.hintSprite) {
+        this.container.removeChild(prevSel.hintSprite);
+      }
+    }
+    // Hide all other selectors
+    if (this._selectors) {
+      for (const sel of Object.values(this._selectors)) {
+        for (const sprite of sel.sprites) {
+          sprite.visible = false;
+        }
+        if (sel.titleSprite) sel.titleSprite.visible = false;
+        if (sel.hintSprite) sel.hintSprite.visible = false;
+      }
     }
 
-    if (frameCounter > 70) {
-      if (this.selectedWithWhoMessageSizeIncrement < 10) {
-        this.selectedWithWhoMessageSizeIncrement += 1;
-      }
-      for (let i = 0; i < 2; i++) {
-        const selected = Number(this.selectedWithWho === i); // 1 if selected, 0 otherwise
-        const halfWidthIncrement =
-          selected * (this.selectedWithWhoMessageSizeIncrement + 2);
-        const halfHeightIncrement =
-          selected * this.selectedWithWhoMessageSizeIncrement;
+    if (!this._selectors) this._selectors = {};
 
-        withWho[i].visible = true;
-        withWho[i].x = 216 - w / 2 - halfWidthIncrement;
-        withWho[i].y = 184 + 30 * i - halfHeightIncrement;
-        withWho[i].width = w + 2 * halfWidthIncrement;
-        withWho[i].height = h + 2 * halfHeightIncrement;
-      }
+    let titleSprite = null;
+    if (title) {
+      titleSprite = new Sprite(makeTextTexture(title, 160, 16, '#000000'));
+      this.container.addChild(titleSprite);
+      titleSprite.visible = false;
+    }
+
+    const sprites = options.map((opt) => {
+      const color = opt.color || '#ffffff';
+      const sprite = new Sprite(makeTextTexture(opt.label, 160, 20, color));
+      this.container.addChild(sprite);
+      sprite.visible = false;
+      return sprite;
+    });
+
+    let hintSprite = null;
+    if (hint) {
+      hintSprite = new Sprite(makeTextTexture(hint, 160, 16, '#444444'));
+      this.container.addChild(hintSprite);
+      hintSprite.visible = false;
+    }
+
+    this._selectors[key] = {
+      sprites,
+      titleSprite,
+      hintSprite,
+      selected: defaultIdx,
+      sizeIncrement: 2,
+    };
+  }
+
+  /**
+   * Draw the selector options with selection animation.
+   * @param {string} key selector key
+   */
+  drawSelector(key) {
+    const sel = this._selectors && this._selectors[key];
+    if (!sel) return;
+
+    // Draw title if present
+    if (sel.titleSprite) {
+      const tw = sel.titleSprite.texture.width;
+      sel.titleSprite.visible = true;
+      sel.titleSprite.x = 216 - tw / 2;
+      sel.titleSprite.y = 168;
+    }
+
+    const sprites = sel.sprites;
+    const w = sprites[0].texture.width;
+    const h = sprites[0].texture.height;
+    const topY = sel.titleSprite ? 194 : 184;
+
+    if (sel.sizeIncrement < 10) {
+      sel.sizeIncrement += 1;
+    }
+
+    for (let i = 0; i < sprites.length; i++) {
+      const selected = Number(sel.selected === i);
+      const halfWidthIncrement = selected * (sel.sizeIncrement + 2);
+      const halfHeightIncrement = selected * sel.sizeIncrement;
+
+      sprites[i].visible = true;
+      sprites[i].x = 216 - w / 2 - halfWidthIncrement;
+      sprites[i].y = topY + 30 * i - halfHeightIncrement;
+      sprites[i].width = w + 2 * halfWidthIncrement;
+      sprites[i].height = h + 2 * halfHeightIncrement;
+    }
+
+    if (sel.hintSprite) {
+      sel.hintSprite.visible = true;
+      const hw = sel.hintSprite.texture.width;
+      sel.hintSprite.x = 216 - hw / 2;
+      sel.hintSprite.y = topY + 30 * sprites.length - 4;
     }
   }
 
   /**
-   * Select with who for the effect that selected option gets bigger
-   * @param {number} i 0: with computer, 1: with friend
+   * Change selected index for a selector.
+   * @param {string} key selector key
+   * @param {number} i new selected index
    */
-  selectWithWho(i) {
-    this.selectedWithWho = i;
-    this.selectedWithWhoMessageSizeIncrement = 2;
+  selectOption(key, i) {
+    const sel = this._selectors && this._selectors[key];
+    if (!sel) return;
+    sel.selected = i;
+    sel.sizeIncrement = 2;
+  }
+
+  /**
+   * Get current selected index.
+   * @param {string} key selector key
+   * @return {number}
+   */
+  getSelected(key) {
+    const sel = this._selectors && this._selectors[key];
+    return sel ? sel.selected : 0;
+  }
+
+  /**
+   * Get option count.
+   * @param {string} key selector key
+   * @return {number}
+   */
+  getOptionCount(key) {
+    const sel = this._selectors && this._selectors[key];
+    return sel ? sel.sprites.length : 0;
+  }
+
+  /**
+   * Hide a selector's sprites and show loading text.
+   * @param {string} key selector key
+   */
+  showLoading(key) {
+    const sel = this._selectors && this._selectors[key];
+    if (sel) {
+      for (const sprite of sel.sprites) {
+        sprite.visible = false;
+      }
+    }
+    if (!this._loadingSprite) {
+      this._loadingSprite = new Sprite(makeTextTexture('Loading...', 120, 20));
+      this.container.addChild(this._loadingSprite);
+    }
+    this._loadingSprite.visible = true;
+    this._loadingSprite.x = 216 - this._loadingSprite.texture.width / 2;
+    this._loadingSprite.y = 200;
+  }
+
+  /**
+   * Hide loading text.
+   */
+  hideLoading() {
+    if (this._loadingSprite) {
+      this._loadingSprite.visible = false;
+    }
   }
 }
 
@@ -341,6 +475,7 @@ export class GameView {
     this.player2 = playerData.sprites[1];
     this._yellowTextures = playerData.yellowTextures;
     this._whiteTextures = playerData.whiteTextures;
+    this._orangeTextures = playerData.orangeTextures;
     this.ball = makeBallAnimatedSprites(textures);
     this.ballHyper = makeSpriteWithAnchorXY(
       textures,
@@ -457,18 +592,24 @@ export class GameView {
   }
 
   /**
-   * Set player skins based on which player is computer.
-   * Computer gets white pikachu, human gets yellow.
-   * @param {boolean} isPlayer1Computer
-   * @param {boolean} isPlayer2Computer
+   * Set player skins by name.
+   * @param {string} p1Skin 'yellow', 'white', or 'orange'
+   * @param {string} p2Skin 'yellow', 'white', or 'orange'
    */
-  setPlayerSkins(isPlayer1Computer, isPlayer2Computer) {
-    this.player1.textures = isPlayer1Computer
-      ? this._whiteTextures
-      : this._yellowTextures;
-    this.player2.textures = isPlayer2Computer
-      ? this._whiteTextures
-      : this._yellowTextures;
+  setPlayerSkins(p1Skin, p2Skin) {
+    this.player1.textures = this._getSkinTextures(p1Skin);
+    this.player2.textures = this._getSkinTextures(p2Skin);
+  }
+
+  _getSkinTextures(skin) {
+    switch (skin) {
+      case 'white':
+        return this._whiteTextures;
+      case 'orange':
+        return this._orangeTextures;
+      default:
+        return this._yellowTextures;
+    }
   }
 
   /** @typedef {import("./physics").PikaPhysics} PikaPhysics */
@@ -840,13 +981,17 @@ function buildPlayerTextureArray(textures, textureFn) {
 /**
  * Make animated sprites for both players
  * @param {Object.<string,Texture>} textures
- * @return {{sprites: AnimatedSprite[], yellowTextures: Texture[], whiteTextures: Texture[]}}
+ * @return {{sprites: AnimatedSprite[], yellowTextures: Texture[], whiteTextures: Texture[], orangeTextures: Texture[]}}
  */
 function makePlayerAnimatedSprites(textures) {
   const yellowTextures = buildPlayerTextureArray(textures, TEXTURES.PIKACHU);
   const whiteTextures = buildPlayerTextureArray(
     textures,
     TEXTURES.PIKACHU_WHITE,
+  );
+  const orangeTextures = buildPlayerTextureArray(
+    textures,
+    TEXTURES.PIKACHU_ORANGE,
   );
 
   // Both start with yellow; swapped at game start based on who is computer
@@ -862,6 +1007,7 @@ function makePlayerAnimatedSprites(textures) {
     sprites: [player1AnimatedSprite, player2AnimatedSprite],
     yellowTextures,
     whiteTextures,
+    orangeTextures,
   };
 }
 

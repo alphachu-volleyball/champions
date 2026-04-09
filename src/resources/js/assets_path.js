@@ -12,6 +12,7 @@ export const ASSETS_PATH = {
 const TEXTURES = ASSETS_PATH.TEXTURES;
 TEXTURES.PIKACHU = (i, j) => `pikachu/pikachu_${i}_${j}.png`;
 TEXTURES.PIKACHU_WHITE = (i, j) => `pikachu_white/pikachu_${i}_${j}.png`;
+TEXTURES.PIKACHU_ORANGE = (i, j) => `pikachu_orange/pikachu_${i}_${j}.png`;
 TEXTURES.BALL = (s) => `ball/ball_${s}.png`;
 TEXTURES.NUMBER = (n) => `number/number_${n}.png`;
 
