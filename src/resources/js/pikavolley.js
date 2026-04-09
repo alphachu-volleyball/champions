@@ -205,8 +205,8 @@ export class PikachuVolleyball {
       return;
     }
 
-    // Transition to model selection after intro animations
-    this._showModelSelect();
+    // Transition to mode selection after intro animations
+    this._showModeSelect();
   }
 
   /**
@@ -472,131 +472,202 @@ export class PikachuVolleyball {
     this.view.menu.visible = false;
     this.view.game.visible = false;
     document.getElementById('nicknames-container').classList.add('hidden');
+    this._watchMode = false;
+    this._watchP1Model = null;
+    this._watchP2Model = null;
+    this._onnxAI2 = null;
     this.state = this.intro;
   }
 
+  // ---------------------------------------------------------------
+  // Menu flow: mode select → model select → side select
+  // ---------------------------------------------------------------
+
   /**
-   * Set up and transition to model selection state.
+   * Show mode selection (Play / Watch).
    */
-  _showModelSelect() {
-    const models = this.availableModels;
-    if (models.length === 0) {
-      // No manifest — go directly to game with defaults
-      this.physics.player1.isComputer = true;
-      this.physics.player2.isComputer = false;
-      this.frameCounter = 0;
-      this.noInputFrameCounter = 0;
-      this.state = this.afterMenuSelection;
+  _showModeSelect() {
+    this.view.menu.setupSelector(
+      'mode',
+      [{ label: 'Play' }, { label: 'Watch' }],
+      0,
+    );
+    this.state = this.modeSelect;
+  }
+
+  /**
+   * Mode selection: Play (human vs AI) or Watch (AI vs AI).
+   * @type {GameState}
+   */
+  modeSelect() {
+    this._navigateSelector('mode');
+    this.view.menu.drawSelector('mode');
+
+    if (this.humanKeyboard.powerHit === 1) {
+      this._isWatchMode = this.view.menu.getSelected('mode') === 1;
+      this.audio.sounds.pikachu.play();
+      this._showModelSelect(this._isWatchMode ? 'player 1' : null);
+    }
+  }
+
+  /**
+   * Show model selection.
+   * @param {string|null} label label for watch mode ('player 1'/'player 2'), null for play mode
+   */
+  _showModelSelect(label) {
+    this._modelSelectLabel = label;
+    const allModels = this.availableModels;
+    if (allModels.length === 0) {
+      this._onModelChosen({ builtin: true, sides: ['left', 'right'] });
       return;
     }
 
-    const defaultIdx = models.findIndex((m) => m._manifestDefault);
-    this.view.menu.setupModelSelect(models, defaultIdx >= 0 ? defaultIdx : 0);
+    // Determine which models are enabled for this side
+    let requiredSide = null;
+    if (label === 'player 1') requiredSide = 'left';
+    else if (label === 'player 2') requiredSide = 'right';
+
+    this._modelEnabled = allModels.map((m) => {
+      if (!requiredSide) return true;
+      return !m.sides || m.sides.includes(requiredSide);
+    });
+
+    const options = allModels.map((m, i) => ({
+      label: m.name || 'Unknown',
+      color: this._modelEnabled[i] ? '#ffffff' : '#888888',
+    }));
+
+    // Default to first enabled model
+    let defaultIdx = allModels.findIndex(
+      (m, i) => m._manifestDefault && this._modelEnabled[i],
+    );
+    if (defaultIdx < 0) {
+      defaultIdx = this._modelEnabled.indexOf(true);
+    }
+    const title = label ? `Pick ${label}` : 'Pick opponent';
+    this.view.menu.setupSelector(
+      'model',
+      options,
+      defaultIdx >= 0 ? defaultIdx : 0,
+      title,
+    );
     this.state = this.modelSelect;
   }
 
   /**
-   * Model selection: choose which AI model to play against.
+   * Model selection state.
    * @type {GameState}
    */
   async modelSelect() {
-    this.view.menu.drawModelSelectMessages();
-
-    if (this.humanKeyboard.yDirection === -1) {
-      const cur = this.view.menu.selectedModel;
-      if (cur > 0) {
-        this.view.menu.selectModel(cur - 1);
-        this.audio.sounds.pi.play();
-      }
-    } else if (this.humanKeyboard.yDirection === 1) {
-      const cur = this.view.menu.selectedModel;
-      if (cur < this.view.menu.modelCount - 1) {
-        this.view.menu.selectModel(cur + 1);
-        this.audio.sounds.pi.play();
-      }
-    }
+    this._navigateSelector('model', this._modelEnabled);
+    this.view.menu.drawSelector('model');
 
     if (this.humanKeyboard.powerHit === 1) {
-      const model = this.availableModels[this.view.menu.selectedModel];
-      this._selectedModelEntry = model;
-      this.view.menu.showModelLoading();
+      const model = this.availableModels[this.view.menu.getSelected('model')];
+      this.view.menu.showLoading('model');
 
-      // Load model
       try {
         if (model && model.builtin) {
-          this.onnxAI = new OnnxAI();
+          this._currentLoadedAI = new OnnxAI();
         } else if (model && model.url) {
-          this.onnxAI = new OnnxAI();
-          await this.onnxAI.load(model.url, model.config);
-          console.log(`AI model loaded: ${this.onnxAI.modelName}`);
+          this._currentLoadedAI = new OnnxAI();
+          await this._currentLoadedAI.load(model.url, model.config);
+          console.log(`AI model loaded: ${this._currentLoadedAI.modelName}`);
         }
       } catch (err) {
         console.warn('Model load failed, using built-in AI:', err.message);
-        this.onnxAI = new OnnxAI();
-        this._selectedModelEntry = { builtin: true, sides: ['left', 'right'] };
+        this._currentLoadedAI = new OnnxAI();
+        model.builtin = true;
+        model.sides = ['left', 'right'];
       }
 
-      this.view.menu.hideModelLoading();
-      this._showSideSelect();
+      this.view.menu.hideLoading();
       this.audio.sounds.pikachu.play();
+      this._onModelChosen(model);
     }
   }
 
   /**
-   * Set up and transition to side selection state.
-   * Shows available sides based on the selected model.
+   * Called after a model is chosen. Routes to next step based on mode.
+   * @param {object} model chosen model entry
+   */
+  _onModelChosen(model) {
+    if (this._isWatchMode) {
+      if (!this._watchP1Model) {
+        // First model chosen → assign to P1, show P2 model select
+        this._watchP1Model = model;
+        this._watchP1AI = this._currentLoadedAI;
+        this._showModelSelect('player 2');
+      } else {
+        // Second model chosen → assign to P2, start game
+        this._watchP2Model = model;
+        this._watchP2AI = this._currentLoadedAI;
+        this._startWatchMode();
+      }
+    } else {
+      // Play mode → side select
+      this._selectedModelEntry = model;
+      this.onnxAI = this._currentLoadedAI;
+      this._showSideSelect();
+    }
+  }
+
+  /**
+   * Start watch mode (AI vs AI).
+   */
+  _startWatchMode() {
+    this.physics.player1.isComputer = true;
+    this.physics.player2.isComputer = true;
+    // Store both AIs — _setupAI will configure them
+    this._watchMode = true;
+    this.onnxAI = this._watchP1AI;
+    this._onnxAI2 = this._watchP2AI;
+    this.frameCounter = 0;
+    this.noInputFrameCounter = 0;
+    this.state = this.afterMenuSelection;
+  }
+
+  /**
+   * Show side selection based on selected model's supported sides.
    */
   _showSideSelect() {
     const model = this._selectedModelEntry || {};
-    const sides = model.sides || ['left', 'right'];
-    const leftEnabled = sides.includes('left');
-    const rightEnabled = sides.includes('right');
+    const modelSides = model.sides || ['left', 'right'];
+    // Human can play the opposite side(s) of the model
+    const humanLeftEnabled = modelSides.includes('right');
+    const humanRightEnabled = modelSides.includes('left');
 
-    this.view.menu.setupSideSelect(leftEnabled, rightEnabled);
-
-    // Set initial cursor to the first enabled side
-    if (leftEnabled) {
-      this._selectedSide = 0;
-    } else {
-      this._selectedSide = 1;
-    }
-    this.view.menu.selectSide(this._selectedSide);
+    const options = [
+      {
+        label: 'Play as Left',
+        color: humanLeftEnabled ? '#ffffff' : '#888888',
+      },
+      {
+        label: 'Play as Right',
+        color: humanRightEnabled ? '#ffffff' : '#888888',
+      },
+    ];
+    const defaultSide = humanLeftEnabled ? 0 : 1;
+    this.view.menu.setupSelector('side', options, defaultSide, 'Pick side');
+    this._sideEnabled = [humanLeftEnabled, humanRightEnabled];
+    this._watchMode = false;
     this.state = this.sideSelect;
   }
 
   /**
-   * Side selection: choose which side to play (left or right).
+   * Side selection state.
    * @type {GameState}
    */
   sideSelect() {
-    this.view.menu.drawSideSelectMessages();
-
-    const model = this._selectedModelEntry || {};
-    const sides = model.sides || ['left', 'right'];
-    const leftEnabled = sides.includes('left');
-    const rightEnabled = sides.includes('right');
-
-    if (this.humanKeyboard.yDirection === -1) {
-      if (this._selectedSide === 1 && leftEnabled) {
-        this._selectedSide = 0;
-        this.view.menu.selectSide(this._selectedSide);
-        this.audio.sounds.pi.play();
-      }
-    } else if (this.humanKeyboard.yDirection === 1) {
-      if (this._selectedSide === 0 && rightEnabled) {
-        this._selectedSide = 1;
-        this.view.menu.selectSide(this._selectedSide);
-        this.audio.sounds.pi.play();
-      }
-    }
+    this._navigateSelector('side', this._sideEnabled);
+    this.view.menu.drawSelector('side');
 
     if (this.humanKeyboard.powerHit === 1) {
-      if (this._selectedSide === 0) {
-        // Play as Left (P1)
+      const selected = this.view.menu.getSelected('side');
+      if (selected === 0) {
         this.physics.player1.isComputer = false;
         this.physics.player2.isComputer = true;
       } else {
-        // Play as Right (P2)
         this.physics.player1.isComputer = true;
         this.physics.player2.isComputer = false;
       }
@@ -608,68 +679,122 @@ export class PikachuVolleyball {
   }
 
   /**
-   * Set up AI for the current game.
-   * Assembles userInputArray based on which side is human/computer.
+   * Navigate a selector with up/down keys (generic helper).
+   * @param {string} key selector key
+   * @param {boolean[]} [enabled] optional array of which options are selectable
    */
+  _navigateSelector(key, enabled) {
+    const cur = this.view.menu.getSelected(key);
+    const count = this.view.menu.getOptionCount(key);
+    if (this.humanKeyboard.yDirection === -1) {
+      for (let i = cur - 1; i >= 0; i--) {
+        if (!enabled || enabled[i]) {
+          this.view.menu.selectOption(key, i);
+          this.audio.sounds.pi.play();
+          break;
+        }
+      }
+    } else if (this.humanKeyboard.yDirection === 1) {
+      for (let i = cur + 1; i < count; i++) {
+        if (!enabled || enabled[i]) {
+          this.view.menu.selectOption(key, i);
+          this.audio.sounds.pi.play();
+          break;
+        }
+      }
+    }
+  }
+
   /**
    * Set up AI for the current game.
-   * Assembles userInputArray based on which side is human/computer.
+   * Assembles userInputArray based on mode (play vs watch).
    * Must be called BEFORE isComputer is modified for ONNX.
    */
   _setupAI() {
     this.onnxAI.reset();
+    if (this._onnxAI2) this._onnxAI2.reset();
 
-    // Store side assignment (before modifying isComputer for ONNX)
-    this._humanIsP1 = !this.physics.player1.isComputer;
+    if (this._watchMode) {
+      // Watch mode: both sides are AI
+      this._p1Input = new PikaUserInput();
+      this._p2Input = new PikaUserInput();
+      this.userInputArray = [this._p1Input, this._p2Input];
 
-    // Assemble input array: human keyboard goes to human's side,
-    // AI input goes to computer's side
-    if (this._humanIsP1) {
-      this.userInputArray = [this.humanKeyboard, this.aiInput];
+      // Disable built-in AI for sides with loaded ONNX models
+      if (this.onnxAI.loaded) {
+        this.physics.player1.isComputer = false;
+      }
+      if (this._onnxAI2 && this._onnxAI2.loaded) {
+        this.physics.player2.isComputer = false;
+      }
     } else {
-      this.userInputArray = [this.aiInput, this.humanKeyboard];
-    }
+      // Play mode: one human, one AI
+      this._humanIsP1 = !this.physics.player1.isComputer;
 
-    // When ONNX model is loaded, disable built-in AI so physics engine
-    // uses the aiInput set by _runAIInference() instead
-    if (this.onnxAI.loaded) {
-      const computerPlayer = this._humanIsP1
-        ? this.physics.player2
-        : this.physics.player1;
-      computerPlayer.isComputer = false;
+      if (this._humanIsP1) {
+        this.userInputArray = [this.humanKeyboard, this.aiInput];
+      } else {
+        this.userInputArray = [this.aiInput, this.humanKeyboard];
+      }
+
+      if (this.onnxAI.loaded) {
+        const computerPlayer = this._humanIsP1
+          ? this.physics.player2
+          : this.physics.player1;
+        computerPlayer.isComputer = false;
+      }
     }
   }
 
   /**
    * Run ONNX AI inference using current game state (before physics step).
-   * Writes the result to this.aiInput.
-   * Falls back to built-in AI (letComputerDecideUserInput) if no model loaded.
    */
   async _runAIInference() {
-    if (!this.onnxAI.loaded) return;
+    if (this._watchMode) {
+      // Watch mode: run inference for both sides
+      const p1 = this.physics.player1;
+      const p2 = this.physics.player2;
+      const ball = this.physics.ball;
 
-    const computerPlayer = this._humanIsP1
-      ? this.physics.player2
-      : this.physics.player1;
-    const humanPlayer = this._humanIsP1
-      ? this.physics.player1
-      : this.physics.player2;
+      if (this.onnxAI.loaded) {
+        await this.onnxAI.decide(p1, p2, ball, this._p1Input);
+      }
+      if (this._onnxAI2 && this._onnxAI2.loaded) {
+        await this._onnxAI2.decide(p2, p1, ball, this._p2Input);
+      }
+    } else {
+      // Play mode: run inference for AI side only
+      if (!this.onnxAI.loaded) return;
 
-    await this.onnxAI.decide(
-      computerPlayer,
-      humanPlayer,
-      this.physics.ball,
-      this.aiInput,
-      this.humanKeyboard,
-    );
+      const computerPlayer = this._humanIsP1
+        ? this.physics.player2
+        : this.physics.player1;
+      const humanPlayer = this._humanIsP1
+        ? this.physics.player1
+        : this.physics.player2;
+
+      await this.onnxAI.decide(
+        computerPlayer,
+        humanPlayer,
+        this.physics.ball,
+        this.aiInput,
+        this.humanKeyboard,
+      );
+    }
   }
 
   /**
    * Update the nickname display overlay based on current player sides
    */
   _updateNicknameDisplay() {
-    const p1Name = this._humanIsP1 ? this.nickname : this.onnxAI.modelName;
-    const p2Name = this._humanIsP1 ? this.onnxAI.modelName : this.nickname;
+    let p1Name, p2Name;
+    if (this._watchMode) {
+      p1Name = this.onnxAI.modelName;
+      p2Name = this._onnxAI2 ? this._onnxAI2.modelName : 'Builtin';
+    } else {
+      p1Name = this._humanIsP1 ? this.nickname : this.onnxAI.modelName;
+      p2Name = this._humanIsP1 ? this.onnxAI.modelName : this.nickname;
+    }
     document.getElementById('player1-nickname').textContent = p1Name;
     document.getElementById('player2-nickname').textContent = p2Name;
     document.getElementById('nicknames-container').classList.remove('hidden');

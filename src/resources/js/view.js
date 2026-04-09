@@ -132,18 +132,16 @@ export class MenuView {
     for (const prop in this.messages) {
       this.messages[prop].visible = false;
     }
-    if (this._modelSprites) {
-      for (const sprite of this._modelSprites) {
-        sprite.visible = false;
+    if (this._selectors) {
+      for (const sel of Object.values(this._selectors)) {
+        for (const sprite of sel.sprites) {
+          sprite.visible = false;
+        }
+        if (sel.titleSprite) sel.titleSprite.visible = false;
       }
     }
     if (this._loadingSprite) {
       this._loadingSprite.visible = false;
-    }
-    if (this._sideSprites) {
-      for (const sprite of this._sideSprites) {
-        sprite.visible = false;
-      }
     }
   }
 
@@ -281,182 +279,160 @@ export class MenuView {
     }
   }
 
+  // ---------------------------------------------------------------
+  // Generic menu selector (used for mode, model, and side selection)
+  // ---------------------------------------------------------------
+
   /**
-   * Set up model selection sprites from a list of model entries.
-   * @param {Array} models array of {name, builtin?, ...}
-   * @param {number} defaultIdx index of the default model
+   * Set up a menu selector with labeled options.
+   * @param {string} key unique key for this selector (e.g. 'mode', 'model', 'side')
+   * @param {Array<{label: string, color?: string}>} options
+   * @param {number} defaultIdx initially selected index
+   * @param {string} [title] optional title shown above options (dark, non-selectable)
    */
-  setupModelSelect(models, defaultIdx) {
-    // Remove previous model sprites
-    if (this._modelSprites) {
-      for (const sprite of this._modelSprites) {
+  setupSelector(key, options, defaultIdx, title) {
+    // Remove previous sprites and title for this key
+    const prevSel = this._selectors && this._selectors[key];
+    if (prevSel) {
+      for (const sprite of prevSel.sprites) {
         this.container.removeChild(sprite);
+      }
+      if (prevSel.titleSprite) {
+        this.container.removeChild(prevSel.titleSprite);
+      }
+    }
+    // Hide all other selectors
+    if (this._selectors) {
+      for (const sel of Object.values(this._selectors)) {
+        for (const sprite of sel.sprites) {
+          sprite.visible = false;
+        }
+        if (sel.titleSprite) sel.titleSprite.visible = false;
       }
     }
 
-    this._modelSprites = models.map((m, i) => {
-      const sprite = new Sprite(
-        makeTextTexture(m.name || `Model ${i}`, 160, 20),
-      );
+    if (!this._selectors) this._selectors = {};
+
+    let titleSprite = null;
+    if (title) {
+      titleSprite = new Sprite(makeTextTexture(title, 160, 16, '#000000'));
+      this.container.addChild(titleSprite);
+      titleSprite.visible = false;
+    }
+
+    const sprites = options.map((opt) => {
+      const color = opt.color || '#ffffff';
+      const sprite = new Sprite(makeTextTexture(opt.label, 160, 20, color));
       this.container.addChild(sprite);
       sprite.visible = false;
       return sprite;
     });
 
-    // Add loading text sprite
-    if (this._loadingSprite) {
-      this.container.removeChild(this._loadingSprite);
-    }
-    this._loadingSprite = new Sprite(makeTextTexture('Loading...', 120, 20));
-    this.container.addChild(this._loadingSprite);
-    this._loadingSprite.visible = false;
-
-    this._selectedModel = defaultIdx;
-    this._selectedModelSizeIncrement = 2;
+    this._selectors[key] = {
+      sprites,
+      titleSprite,
+      selected: defaultIdx,
+      sizeIncrement: 2,
+    };
   }
 
   /**
-   * Draw model selection options.
+   * Draw the selector options with selection animation.
+   * @param {string} key selector key
    */
-  drawModelSelectMessages() {
-    const sprites = this._modelSprites;
-    if (!sprites || sprites.length === 0) return;
+  drawSelector(key) {
+    const sel = this._selectors && this._selectors[key];
+    if (!sel) return;
 
+    // Draw title if present
+    if (sel.titleSprite) {
+      const tw = sel.titleSprite.texture.width;
+      sel.titleSprite.visible = true;
+      sel.titleSprite.x = 216 - tw / 2;
+      sel.titleSprite.y = 168;
+    }
+
+    const sprites = sel.sprites;
     const w = sprites[0].texture.width;
     const h = sprites[0].texture.height;
+    const topY = sel.titleSprite ? 194 : 184;
 
-    if (this._selectedModelSizeIncrement < 10) {
-      this._selectedModelSizeIncrement += 1;
+    if (sel.sizeIncrement < 10) {
+      sel.sizeIncrement += 1;
     }
 
     for (let i = 0; i < sprites.length; i++) {
-      const selected = Number(this._selectedModel === i);
-      const halfWidthIncrement =
-        selected * (this._selectedModelSizeIncrement + 2);
-      const halfHeightIncrement = selected * this._selectedModelSizeIncrement;
+      const selected = Number(sel.selected === i);
+      const halfWidthIncrement = selected * (sel.sizeIncrement + 2);
+      const halfHeightIncrement = selected * sel.sizeIncrement;
 
       sprites[i].visible = true;
       sprites[i].x = 216 - w / 2 - halfWidthIncrement;
-      sprites[i].y = 184 + 30 * i - halfHeightIncrement;
+      sprites[i].y = topY + 30 * i - halfHeightIncrement;
       sprites[i].width = w + 2 * halfWidthIncrement;
       sprites[i].height = h + 2 * halfHeightIncrement;
     }
   }
 
   /**
-   * Select a model option for the size animation.
-   * @param {number} i index
+   * Change selected index for a selector.
+   * @param {string} key selector key
+   * @param {number} i new selected index
    */
-  selectModel(i) {
-    this._selectedModel = i;
-    this._selectedModelSizeIncrement = 2;
+  selectOption(key, i) {
+    const sel = this._selectors && this._selectors[key];
+    if (!sel) return;
+    sel.selected = i;
+    sel.sizeIncrement = 2;
   }
 
   /**
-   * Hide model select sprites and show loading text.
+   * Get current selected index.
+   * @param {string} key selector key
+   * @return {number}
    */
-  showModelLoading() {
-    if (this._modelSprites) {
-      for (const sprite of this._modelSprites) {
+  getSelected(key) {
+    const sel = this._selectors && this._selectors[key];
+    return sel ? sel.selected : 0;
+  }
+
+  /**
+   * Get option count.
+   * @param {string} key selector key
+   * @return {number}
+   */
+  getOptionCount(key) {
+    const sel = this._selectors && this._selectors[key];
+    return sel ? sel.sprites.length : 0;
+  }
+
+  /**
+   * Hide a selector's sprites and show loading text.
+   * @param {string} key selector key
+   */
+  showLoading(key) {
+    const sel = this._selectors && this._selectors[key];
+    if (sel) {
+      for (const sprite of sel.sprites) {
         sprite.visible = false;
       }
     }
-    if (this._loadingSprite) {
-      this._loadingSprite.visible = true;
-      this._loadingSprite.x = 216 - this._loadingSprite.texture.width / 2;
-      this._loadingSprite.y = 200;
+    if (!this._loadingSprite) {
+      this._loadingSprite = new Sprite(makeTextTexture('Loading...', 120, 20));
+      this.container.addChild(this._loadingSprite);
     }
+    this._loadingSprite.visible = true;
+    this._loadingSprite.x = 216 - this._loadingSprite.texture.width / 2;
+    this._loadingSprite.y = 200;
   }
 
   /**
-   * Hide model loading text.
+   * Hide loading text.
    */
-  hideModelLoading() {
+  hideLoading() {
     if (this._loadingSprite) {
       this._loadingSprite.visible = false;
     }
-  }
-
-  /** @return {number} selected model index */
-  get selectedModel() {
-    return this._selectedModel;
-  }
-
-  /** @return {number} number of model options */
-  get modelCount() {
-    return this._modelSprites ? this._modelSprites.length : 0;
-  }
-
-  /**
-   * Set up side selection sprites.
-   * @param {boolean} leftEnabled can the player choose left?
-   * @param {boolean} rightEnabled can the player choose right?
-   */
-  setupSideSelect(leftEnabled, rightEnabled) {
-    // Remove previous side sprites
-    if (this._sideSprites) {
-      for (const sprite of this._sideSprites) {
-        this.container.removeChild(sprite);
-      }
-    }
-    // Hide model sprites
-    if (this._modelSprites) {
-      for (const sprite of this._modelSprites) {
-        sprite.visible = false;
-      }
-    }
-
-    const leftColor = leftEnabled ? '#ffffff' : '#888888';
-    const rightColor = rightEnabled ? '#ffffff' : '#888888';
-    this._sideSprites = [
-      new Sprite(makeTextTexture('Play as Left', 120, 20, leftColor)),
-      new Sprite(makeTextTexture('Play as Right', 120, 20, rightColor)),
-    ];
-    this._sideEnabled = [leftEnabled, rightEnabled];
-    for (const sprite of this._sideSprites) {
-      this.container.addChild(sprite);
-      sprite.visible = false;
-    }
-
-    this._selectedSide = -1;
-    this._selectedSideSizeIncrement = 2;
-  }
-
-  /**
-   * Draw side selection options.
-   */
-  drawSideSelectMessages() {
-    const sprites = this._sideSprites;
-    if (!sprites) return;
-
-    const w = sprites[0].texture.width;
-    const h = sprites[0].texture.height;
-
-    if (this._selectedSideSizeIncrement < 10) {
-      this._selectedSideSizeIncrement += 1;
-    }
-
-    for (let i = 0; i < sprites.length; i++) {
-      const selected = Number(this._selectedSide === i);
-      const halfWidthIncrement =
-        selected * (this._selectedSideSizeIncrement + 2);
-      const halfHeightIncrement = selected * this._selectedSideSizeIncrement;
-
-      sprites[i].visible = true;
-      sprites[i].x = 216 - w / 2 - halfWidthIncrement;
-      sprites[i].y = 184 + 30 * i - halfHeightIncrement;
-      sprites[i].width = w + 2 * halfWidthIncrement;
-      sprites[i].height = h + 2 * halfHeightIncrement;
-    }
-  }
-
-  /**
-   * Select a side option for the size animation.
-   * @param {number} i 0: left, 1: right
-   */
-  selectSide(i) {
-    this._selectedSide = i;
-    this._selectedSideSizeIncrement = 2;
   }
 }
 
