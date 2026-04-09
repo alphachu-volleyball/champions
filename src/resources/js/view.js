@@ -148,6 +148,11 @@ export class MenuView {
     if (this._loadingSprite) {
       this._loadingSprite.visible = false;
     }
+    if (this._sideSprites) {
+      for (const sprite of this._sideSprites) {
+        sprite.visible = false;
+      }
+    }
   }
 
   /**
@@ -344,9 +349,8 @@ export class MenuView {
     }
 
     this._modelSprites = models.map((m, i) => {
-      const color = i === defaultIdx ? '#ffffff' : '#cccccc';
       const sprite = new Sprite(
-        makeTextTexture(m.name || `Model ${i}`, 160, 20, color),
+        makeTextTexture(m.name || `Model ${i}`, 160, 20),
       );
       this.container.addChild(sprite);
       sprite.visible = false;
@@ -435,6 +439,78 @@ export class MenuView {
   /** @return {number} number of model options */
   get modelCount() {
     return this._modelSprites ? this._modelSprites.length : 0;
+  }
+
+  /**
+   * Set up side selection sprites.
+   * @param {boolean} leftEnabled can the player choose left?
+   * @param {boolean} rightEnabled can the player choose right?
+   */
+  setupSideSelect(leftEnabled, rightEnabled) {
+    // Remove previous side sprites
+    if (this._sideSprites) {
+      for (const sprite of this._sideSprites) {
+        this.container.removeChild(sprite);
+      }
+    }
+    // Hide model sprites
+    if (this._modelSprites) {
+      for (const sprite of this._modelSprites) {
+        sprite.visible = false;
+      }
+    }
+
+    const leftColor = leftEnabled ? '#ffffff' : '#888888';
+    const rightColor = rightEnabled ? '#ffffff' : '#888888';
+    this._sideSprites = [
+      new Sprite(makeTextTexture('Play as Left', 120, 20, leftColor)),
+      new Sprite(makeTextTexture('Play as Right', 120, 20, rightColor)),
+    ];
+    this._sideEnabled = [leftEnabled, rightEnabled];
+    for (const sprite of this._sideSprites) {
+      this.container.addChild(sprite);
+      sprite.visible = false;
+    }
+
+    this._selectedSide = -1;
+    this._selectedSideSizeIncrement = 2;
+  }
+
+  /**
+   * Draw side selection options.
+   */
+  drawSideSelectMessages() {
+    const sprites = this._sideSprites;
+    if (!sprites) return;
+
+    const w = sprites[0].texture.width;
+    const h = sprites[0].texture.height;
+
+    if (this._selectedSideSizeIncrement < 10) {
+      this._selectedSideSizeIncrement += 1;
+    }
+
+    for (let i = 0; i < sprites.length; i++) {
+      const selected = Number(this._selectedSide === i);
+      const halfWidthIncrement =
+        selected * (this._selectedSideSizeIncrement + 2);
+      const halfHeightIncrement = selected * this._selectedSideSizeIncrement;
+
+      sprites[i].visible = true;
+      sprites[i].x = 216 - w / 2 - halfWidthIncrement;
+      sprites[i].y = 184 + 30 * i - halfHeightIncrement;
+      sprites[i].width = w + 2 * halfWidthIncrement;
+      sprites[i].height = h + 2 * halfHeightIncrement;
+    }
+  }
+
+  /**
+   * Select a side option for the size animation.
+   * @param {number} i 0: left, 1: right
+   */
+  selectSide(i) {
+    this._selectedSide = i;
+    this._selectedSideSizeIncrement = 2;
   }
 }
 

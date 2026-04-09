@@ -207,9 +207,11 @@ class Key {
   }
 
   /**
-   * Subscribe event listeners
+   * Subscribe event listeners (safe to call multiple times)
    */
   subscribe() {
+    window.removeEventListener('keydown', this.downListener);
+    window.removeEventListener('keyup', this.upListener);
     window.addEventListener('keyup', this.upListener);
     window.addEventListener('keydown', this.downListener);
   }

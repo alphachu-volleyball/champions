@@ -178,22 +178,19 @@ export class PikachuVolleyball {
   }
 
   /**
-   * Menu: select which side to play (left P1 or right P2)
+   * Menu: show intro animations then transition to model selection.
    * @type {GameState}
    */
   menu() {
     if (this.frameCounter === 0) {
       this.view.menu.visible = true;
       this.view.fadeInOut.setBlackAlphaTo(0);
-      this.selectedSide = 0;
-      this.view.menu.selectWithWho(this.selectedSide);
     }
     this.view.menu.drawFightMessage(this.frameCounter);
     this.view.menu.drawSachisoft(this.frameCounter);
     this.view.menu.drawSittingPikachuTiles(this.frameCounter);
     this.view.menu.drawPikachuVolleyballMessage(this.frameCounter);
     this.view.menu.drawPokemonMessage(this.frameCounter);
-    this.view.menu.drawWithWhoMessages(this.frameCounter);
     this.frameCounter++;
 
     if (
@@ -209,29 +206,8 @@ export class PikachuVolleyball {
       return;
     }
 
-    // selectedSide is locked to 0 (Play as Right); Play as Left is disabled
-    this.noInputFrameCounter++;
-
-    if (
-      this.keyboardArray[0].powerHit === 1 ||
-      this.keyboardArray[1].powerHit === 1
-    ) {
-      // Play as Right (P2) — only option
-      this.physics.player1.isComputer = true;
-      this.physics.player2.isComputer = false;
-      this.audio.sounds.pikachu.play();
-      this.paused = true;
-      this._showModelSelect();
-      return;
-    }
-
-    if (this.noInputFrameCounter >= this.noInputFrameTotal.menu) {
-      this.physics.player1.isComputer = true;
-      this.physics.player2.isComputer = true;
-      this.frameCounter = 0;
-      this.noInputFrameCounter = 0;
-      this.state = this.afterMenuSelection;
-    }
+    // Transition to model selection after intro animations
+    this._showModelSelect();
   }
 
   /**
@@ -508,20 +484,17 @@ export class PikachuVolleyball {
   _showModelSelect() {
     const models = this.availableModels;
     if (models.length === 0) {
+      // No manifest — go directly to game with defaults
+      this.physics.player1.isComputer = true;
+      this.physics.player2.isComputer = false;
       this.frameCounter = 0;
       this.noInputFrameCounter = 0;
-      this.paused = false;
       this.state = this.afterMenuSelection;
       return;
     }
 
     const defaultIdx = models.findIndex((m) => m._manifestDefault);
     this.view.menu.setupModelSelect(models, defaultIdx >= 0 ? defaultIdx : 0);
-    // Hide side selection sprites
-    for (const sprite of this.view.menu.messages.withWho) {
-      sprite.visible = false;
-    }
-    this.paused = false;
     this.state = this.modelSelect;
   }
 
@@ -557,8 +530,10 @@ export class PikachuVolleyball {
       this.keyboardArray[1].powerHit === 1
     ) {
       const model = this.availableModels[this.view.menu.selectedModel];
+      this._selectedModelEntry = model;
       this.view.menu.showModelLoading();
 
+      // Load model
       try {
         if (model && model.builtin) {
           this.onnxAI = new OnnxAI();
@@ -570,9 +545,83 @@ export class PikachuVolleyball {
       } catch (err) {
         console.warn('Model load failed, using built-in AI:', err.message);
         this.onnxAI = new OnnxAI();
+        this._selectedModelEntry = { builtin: true, sides: ['left', 'right'] };
       }
 
       this.view.menu.hideModelLoading();
+      this._showSideSelect();
+      this.audio.sounds.pikachu.play();
+    }
+  }
+
+  /**
+   * Set up and transition to side selection state.
+   * Shows available sides based on the selected model.
+   */
+  _showSideSelect() {
+    const model = this._selectedModelEntry || {};
+    const sides = model.sides || ['left', 'right'];
+    const leftEnabled = sides.includes('left');
+    const rightEnabled = sides.includes('right');
+
+    this.view.menu.setupSideSelect(leftEnabled, rightEnabled);
+
+    // Set initial cursor to the first enabled side
+    if (leftEnabled) {
+      this._selectedSide = 0;
+    } else {
+      this._selectedSide = 1;
+    }
+    this.view.menu.selectSide(this._selectedSide);
+    this.state = this.sideSelect;
+  }
+
+  /**
+   * Side selection: choose which side to play (left or right).
+   * @type {GameState}
+   */
+  sideSelect() {
+    this.view.menu.drawSideSelectMessages();
+
+    const model = this._selectedModelEntry || {};
+    const sides = model.sides || ['left', 'right'];
+    const leftEnabled = sides.includes('left');
+    const rightEnabled = sides.includes('right');
+
+    if (
+      this.keyboardArray[0].yDirection === -1 ||
+      this.keyboardArray[1].yDirection === -1
+    ) {
+      if (this._selectedSide === 1 && leftEnabled) {
+        this._selectedSide = 0;
+        this.view.menu.selectSide(this._selectedSide);
+        this.audio.sounds.pi.play();
+      }
+    } else if (
+      this.keyboardArray[0].yDirection === 1 ||
+      this.keyboardArray[1].yDirection === 1
+    ) {
+      if (this._selectedSide === 0 && rightEnabled) {
+        this._selectedSide = 1;
+        this.view.menu.selectSide(this._selectedSide);
+        this.audio.sounds.pi.play();
+      }
+    }
+
+    if (
+      this.keyboardArray[0].powerHit === 1 ||
+      this.keyboardArray[1].powerHit === 1
+    ) {
+      if (this._selectedSide === 0) {
+        // Play as Left (P1)
+        this.physics.player1.isComputer = false;
+        this.physics.player2.isComputer = true;
+      } else {
+        // Play as Right (P2)
+        this.physics.player1.isComputer = true;
+        this.physics.player2.isComputer = false;
+      }
+      this.audio.sounds.pikachu.play();
       this.frameCounter = 0;
       this.noInputFrameCounter = 0;
       this.state = this.afterMenuSelection;
@@ -585,6 +634,10 @@ export class PikachuVolleyball {
    */
   _setupAI() {
     this.onnxAI.reset();
+
+    // Re-subscribe all keyboards first (may have been unsubscribed in a previous game)
+    this.keyboardArray[0].subscribe();
+    this.keyboardArray[1].subscribe();
 
     this._computerIdx = this.physics.player1.isComputer ? 0 : 1;
     this._humanIdx = this._computerIdx === 0 ? 1 : 0;
