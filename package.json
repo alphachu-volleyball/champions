@@ -1,5 +1,5 @@
 {
-  "name": "world-tournament",
+  "name": "champions",
   "version": "0.1.0",
   "description": "Web demo for alphachu-volleyball — play against RL-trained AI in the browser",
   "private": true,
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alphachu-volleyball/world-tournament.git"
+    "url": "git+https://github.com/alphachu-volleyball/champions.git"
   },
   "license": "UNLICENSED",
   "dependencies": {
