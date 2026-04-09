@@ -33,12 +33,12 @@ graph LR
 
 ### AI Opponents
 
-| AI | Side | Human plays as | Skin | Description |
-|----|------|---------------|------|-------------|
-| **Alphachu v1** | Left (P1) | Right (P2) | `#ffffff` white | RL-trained PPO model ([Hugging Face](https://huggingface.co/alphachu-volleyball/alphachu-v1)) |
-| **Builtin** | Left or Right | Either side | `#ffffff` white | Original game heuristic AI |
+| AI | Side | Skin | Description |
+|----|------|------|-------------|
+| **Alphachu v1** | Left (P1) only | `#ffffff` white | RL-trained PPO model ([Hugging Face](https://huggingface.co/alphachu-volleyball/alphachu-v1)) |
+| **Builtin** | Left or Right | `#ff8c00` orange | Original game heuristic AI |
 
-Select your opponent and side from the in-game menu. Human player appears as `#ffff00` yellow pikachu.
+Two modes: **Play** (human vs AI) and **Watch** (AI vs AI). Human player appears as `#ffff00` yellow pikachu.
 
 ## Quick Start
 

@@ -20,7 +20,7 @@ alphachu-volleyball/
 └── vs-recorder           ← Replay analysis (future)
 ```
 
-- **Upstream**: training-center (ONNX models via GitHub Releases)
+- **Upstream**: training-center (ONNX models via [Hugging Face Hub](https://huggingface.co/alphachu-volleyball))
 - **Downstream**: none — this is the end-user facing product
 
 ### Tech Stack
@@ -108,14 +108,16 @@ Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`
 
 ### Available AI Opponents
 
-| AI | Side | Human plays as | Skin | Source |
-|----|------|---------------|------|--------|
-| **Alphachu v1** | Left (P1) | Right (P2) | `#ffffff` white | [Hugging Face](https://huggingface.co/alphachu-volleyball/alphachu-v1) |
-| **Builtin** | Left or Right | Either side | `#ffffff` white | Original game heuristic AI |
+| AI | Side | Skin | Source |
+|----|------|------|--------|
+| **Alphachu v1** | Left (P1) only | `#ffffff` white | [Hugging Face](https://huggingface.co/alphachu-volleyball/alphachu-v1) |
+| **Builtin** | Left or Right | `#ff8c00` orange | Original game heuristic AI |
 
-- AI player always renders as `#ffffff` white pikachu, human as `#ffff00` yellow pikachu
-- Available opponents and supported sides are configured in `src/manifest.json`
-- Model selection → side selection flow in the menu
+- Human player renders as `#ffff00` yellow pikachu
+- AI skin is configured per model in `src/manifest.json` (`skin` field)
+- `sides` field in manifest = sides the **model** can play on
+- Menu flow: **mode select** (Play/Watch) → **model select** → **side select** (Play) or **P1/P2 model select** (Watch)
+- Backspace navigates back through menu steps
 
 ### Actor Types and Input Architecture
 
