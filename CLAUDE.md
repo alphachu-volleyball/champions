@@ -106,6 +106,20 @@ Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`
 - Models are loaded at runtime via ONNX Runtime Web
 - Models are NOT committed to Git
 
+### Observation Timing
+
+ONNX inference runs **before** the physics step, matching pika-zoo's observation timing:
+
+```
+pika-zoo:          observe(prev state) → decide → physics step → new state
+world-tournament:  observe(prev state) → decide → physics step → new state
+```
+
+The built-in AI (`letComputerDecideUserInput`) runs inside the physics step as in the original game.
+This difference is intentional — the RL model was trained with pika-zoo's timing.
+
+Reference: [alphachu-volleyball/pika-zoo#49](https://github.com/alphachu-volleyball/pika-zoo/pull/49)
+
 ## Future: Game Data Collection
 
 - Collect human-vs-AI game records (summary, round stats, frame logs) for model improvement
