@@ -1,4 +1,4 @@
-# world-tournament - Claude Development Guide
+# champions - Claude Development Guide
 
 ## Project Overview
 
@@ -16,7 +16,7 @@ Web demo for alphachu-volleyball — play against RL-trained AI in the browser.
 alphachu-volleyball/
 ├── pika-zoo              ← RL environment + physics engine
 ├── training-center       ← Training pipeline → ONNX export
-├── world-tournament      ← this repo: web demo (GitHub Pages)
+├── champions      ← this repo: web demo (GitHub Pages)
 └── vs-recorder           ← Replay analysis (future)
 ```
 
@@ -139,7 +139,7 @@ ONNX inference runs **before** the physics step, matching pika-zoo's observation
 
 ```
 pika-zoo:          observe(prev state) → decide → physics step → new state
-world-tournament:  observe(prev state) → decide → physics step → new state
+champions:  observe(prev state) → decide → physics step → new state
 ```
 
 The built-in AI (`letComputerDecideUserInput`) runs inside the physics step as in the original game.

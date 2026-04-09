@@ -1,4 +1,4 @@
-# world-tournament
+# champions
 
 Web demo for [alphachu-volleyball](https://github.com/alphachu-volleyball) — play against RL-trained AI in your browser.
 
@@ -20,7 +20,7 @@ A web demo where you can play Pikachu Volleyball against an RL-trained AI direct
 ```mermaid
 graph LR
     TC["🧪 training-center<br>PPO Training → ONNX Export"]
-    WT["🌐 world-tournament<br>Game Engine + ONNX Runtime Web"]
+    WT["🌐 champions<br>Game Engine + ONNX Runtime Web"]
     USER["🎮 Player"]
 
     TC -- "ONNX model<br>(Hugging Face)" --> WT
@@ -28,7 +28,7 @@ graph LR
 ```
 
 1. [training-center](https://github.com/alphachu-volleyball/training-center) trains RL models and exports them as ONNX
-2. world-tournament fetches the ONNX model from [Hugging Face Hub](https://huggingface.co/alphachu-volleyball)
+2. champions fetches the ONNX model from [Hugging Face Hub](https://huggingface.co/alphachu-volleyball)
 3. When a user opens the page, ONNX Runtime Web loads the model and runs it as the AI player
 
 ### AI Opponents
