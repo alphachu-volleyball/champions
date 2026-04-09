@@ -6,6 +6,7 @@ import { GROUND_HALF_WIDTH, PikaPhysics } from './physics.js';
 import { MenuView, GameView, FadeInOut, IntroView } from './view.js';
 import { PikaKeyboard } from './keyboard.js';
 import { PikaAudio } from './audio.js';
+import { OnnxAI } from './ai.js';
 
 /** @typedef {import('@pixi/display').Container} Container */
 /** @typedef {import('@pixi/loaders').LoaderResource} LoaderResource */
@@ -102,8 +103,9 @@ export class PikachuVolleyball {
 
     /** @type {string} human player nickname */
     this.nickname = 'Player';
-    /** @type {string} AI model name */
-    this.modelName = 'AI';
+
+    /** @type {OnnxAI} ONNX model AI */
+    this.onnxAI = new OnnxAI();
 
     /**
      * The game state which is being rendered now
@@ -117,7 +119,7 @@ export class PikachuVolleyball {
    * This function should be called at regular intervals ( interval = (1 / FPS) second )
    */
   gameLoop() {
-    if (this.paused === true) {
+    if (this.paused === true || this._processing === true) {
       return;
     }
     if (this.slowMotionFramesLeft > 0) {
@@ -135,7 +137,11 @@ export class PikachuVolleyball {
     // catch keyboard input and freeze it
     this.keyboardArray[0].getInput();
     this.keyboardArray[1].getInput();
-    this.state();
+
+    this._processing = true;
+    Promise.resolve(this.state()).finally(() => {
+      this._processing = false;
+    });
   }
 
   /**
@@ -272,6 +278,7 @@ export class PikachuVolleyball {
         this.physics.player2.isComputer,
       );
       this._updateNicknameDisplay();
+      this._setupAICallback();
 
       this.scores[0] = 0;
       this.scores[1] = 0;
@@ -305,7 +312,7 @@ export class PikachuVolleyball {
    * Round: the players play volleyball in this game state
    * @type {GameState}
    */
-  round() {
+  async round() {
     const pressedPowerHit =
       this.keyboardArray[0].powerHit === 1 ||
       this.keyboardArray[1].powerHit === 1;
@@ -321,7 +328,7 @@ export class PikachuVolleyball {
       return;
     }
 
-    const isBallTouchingGround = this.physics.runEngineForNextFrame(
+    const isBallTouchingGround = await this.physics.runEngineForNextFrame(
       this.keyboardArray,
     );
 
@@ -491,14 +498,39 @@ export class PikachuVolleyball {
   }
 
   /**
+   * Set up the ONNX AI callback on the physics engine.
+   * Falls back to built-in AI if no model is loaded.
+   */
+  _setupAICallback() {
+    this.onnxAI.reset();
+
+    // Unsubscribe computer player's keyboard to prevent human key input leaking
+    const computerIdx = this.physics.player1.isComputer ? 0 : 1;
+    this.keyboardArray[computerIdx].unsubscribe();
+
+    if (this.onnxAI.loaded) {
+      const ai = this.onnxAI;
+      const physics = this.physics;
+      this.physics.externalAICallback = (player, ball, otherPlayer, input) => {
+        const humanPlayer = player.isPlayer2
+          ? physics.player1
+          : physics.player2;
+        return ai.decide(player, humanPlayer, ball, input);
+      };
+    } else {
+      this.physics.externalAICallback = null;
+    }
+  }
+
+  /**
    * Update the nickname display overlay based on current player sides
    */
   _updateNicknameDisplay() {
     const p1Name = this.physics.player1.isComputer
-      ? this.modelName
+      ? this.onnxAI.modelName
       : this.nickname;
     const p2Name = this.physics.player2.isComputer
-      ? this.modelName
+      ? this.onnxAI.modelName
       : this.nickname;
     document.getElementById('player1-nickname').textContent = p1Name;
     document.getElementById('player2-nickname').textContent = p2Name;

@@ -20,6 +20,11 @@ module.exports = {
           from: 'resources/assets/**/*.+(json|png|mp3|wav)',
         },
         { from: 'src/resources/style.css', to: 'resources/style.css' },
+        {
+          from: 'node_modules/onnxruntime-web/dist/*.wasm',
+          to: '[name][ext]',
+        },
+        { from: 'src/manifest.json', to: 'manifest.json' },
       ],
     }),
     new HtmlWebpackPlugin({

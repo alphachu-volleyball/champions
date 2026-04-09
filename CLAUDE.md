@@ -101,7 +101,8 @@ Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`
 
 ## Model Integration
 
-- ONNX models are fetched from training-center GitHub Releases
+- ONNX models are hosted on [Hugging Face Hub](https://huggingface.co/alphachu-volleyball)
+- `src/manifest.json` lists available models with Hugging Face URLs
 - Models are loaded at runtime via ONNX Runtime Web
 - Models are NOT committed to Git
 
