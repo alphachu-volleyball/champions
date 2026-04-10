@@ -13,6 +13,39 @@
 import * as ort from 'onnxruntime-web';
 
 // -----------------------------------------------------------------------
+// Model cache (Cache API)
+// -----------------------------------------------------------------------
+
+const MODEL_CACHE_NAME = 'alphachu-models-v1';
+
+/**
+ * Fetch with Cache API fallback — checks cache first, falls back to network.
+ * On network success, stores the response for next time.
+ * @param {string} url
+ * @returns {Promise<Response>}
+ */
+async function fetchWithCache(url) {
+  if (typeof caches === 'undefined') return fetch(url);
+  try {
+    const cache = await caches.open(MODEL_CACHE_NAME);
+    const cached = await cache.match(url);
+    if (cached) {
+      console.log(`Model loaded from cache: ${url}`);
+      return cached;
+    }
+    const response = await fetch(url);
+    if (response.ok) {
+      await cache.put(url, response.clone());
+      console.log(`Model cached: ${url}`);
+    }
+    return response;
+  } catch (err) {
+    console.warn('Cache API unavailable, falling back to network:', err.message);
+    return fetch(url);
+  }
+}
+
+// -----------------------------------------------------------------------
 // Constants (must match pika-zoo/engine/constants.py)
 // -----------------------------------------------------------------------
 
@@ -260,8 +293,8 @@ export class OnnxAI {
       // No config file — use defaults
     }
 
-    // Fetch model as ArrayBuffer (handles redirects from Hugging Face, etc.)
-    const modelResp = await fetch(modelUrl);
+    // Fetch model as ArrayBuffer (Cache API first, fall back to network)
+    const modelResp = await fetchWithCache(modelUrl);
     if (!modelResp.ok)
       throw new Error(`model fetch failed: ${modelResp.status}`);
     const modelBuffer = await modelResp.arrayBuffer();
