@@ -76,6 +76,12 @@ feat/* ──(squash)──► release/vX.Y.Z ──(merge)──► main ──
 fix/*  ──(squash)──►
 ```
 
+## Analytics
+
+Visitor analytics are tracked with [GoatCounter](https://www.goatcounter.com/) — privacy-friendly, no cookies.
+
+- Dashboard: https://alphachu-volleyball.goatcounter.com/
+
 ## Related Projects
 
 - [alphachu-volleyball/pika-zoo](https://github.com/alphachu-volleyball/pika-zoo) — Pikachu Volleyball RL environment (Python)
