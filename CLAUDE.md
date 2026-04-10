@@ -99,8 +99,7 @@ Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`
 | Workflow | Trigger | Action |
 |----------|---------|--------|
 | `ci.yml` | PR, push to main | ESLint, build check |
-| `deploy.yml` | push to main | GitHub Pages deploy |
-| `release.yml` | release/* PR merged into main | Create `vX.Y.Z` tag + GitHub Release |
+| `release.yml` | release/* PR merged into main | Create `vX.Y.Z` tag + GitHub Release, then build & deploy to GitHub Pages |
 
 ## Code Copy Policy
 
