@@ -1,6 +1,6 @@
 {
   "name": "champions",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Web demo for alphachu-volleyball — play against RL-trained AI in the browser",
   "private": true,
   "scripts": {
