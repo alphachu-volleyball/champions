@@ -72,8 +72,15 @@ See [CLAUDE.md](CLAUDE.md) for the full development guide.
 ### Branch Workflow
 
 ```
-feat/* ──(squash)──► main ──(auto deploy)──► GitHub Pages
+feat/* ──(squash)──► release/vX.Y.Z ──(merge)──► main ──(auto)──► tag + release + deploy
+fix/*  ──(squash)──►
 ```
+
+## Analytics
+
+Visitor analytics are tracked with [GoatCounter](https://www.goatcounter.com/) — privacy-friendly, no cookies.
+
+- Dashboard: https://alphachu-volleyball.goatcounter.com/
 
 ## Related Projects
 

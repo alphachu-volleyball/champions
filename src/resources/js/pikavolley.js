@@ -163,6 +163,13 @@ export class PikachuVolleyball {
       this.view.fadeInOut.setBlackAlphaTo(0);
       this.audio.sounds.bgm.stop();
       document.getElementById('nicknames-container').classList.add('hidden');
+      // Reset watch mode state so the next game starts fresh
+      this._watchMode = false;
+      this._watchP1Model = null;
+      this._watchP2Model = null;
+      this._watchP1AI = null;
+      this._watchP2AI = null;
+      this._onnxAI2 = null;
     }
     this.view.intro.drawMark(this.frameCounter);
     this.frameCounter++;

@@ -53,15 +53,31 @@ ESLint handles code quality rules, Prettier handles formatting. Both run in CI.
 
 ### Branch Workflow
 
-No release branch — two-tier workflow:
+Three-tier workflow with release branches:
 
 ```
-feat/* ──(squash merge)──► main ──(auto deploy)──► GitHub Pages
-fix/*  ──(squash merge)──►
+feat/* ──(squash)──► release/vX.Y.Z ──(merge commit)──► main ──(auto)──► tag + release + deploy
+fix/*  ──(squash)──►
 ```
 
-- feat/fix → main: squash merge (PR required)
-- Tags: manual semver tagging at milestones (v0.1.0, v0.2.0, ...)
+- **feat/fix → release/vX.Y.Z**: squash merge (enforced by ruleset `Features to release`)
+- **release/vX.Y.Z → main**: merge commit (enforced by ruleset `Protect main`)
+- On main merge: the Release workflow auto-creates the `vX.Y.Z` tag and GitHub Release; the Deploy workflow ships the new build to GitHub Pages
+
+### Issues & Milestones
+
+- Each release has a milestone named `vX.Y.Z`
+- All issues for that release are assigned to the milestone
+- Issues are worked on by branching off the corresponding `release/*` branch
+
+### Preparing a Release
+
+When all work for `release/vX.Y.Z` is merged in, use the `prepare-release` skill (or manually):
+
+1. Bump `package.json` version, sync `package-lock.json`
+2. Commit `chore: bump version to {version}`
+3. Open a PR `release: vX.Y.Z` from `release/vX.Y.Z` → `main`
+4. After merge, the Release workflow handles tagging and the GitHub Release
 
 ### Commit Convention
 
@@ -80,10 +96,10 @@ Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`
 
 ## CI/CD (GitHub Actions)
 
-| Trigger | Action |
-|---------|--------|
-| PR, push to main | ESLint, build check |
-| push to main | GitHub Pages deploy |
+| Workflow | Trigger | Action |
+|----------|---------|--------|
+| `ci.yml` | PR, push to main | ESLint, build check |
+| `release.yml` | release/* PR merged into main | Create `vX.Y.Z` tag + GitHub Release, then build & deploy to GitHub Pages |
 
 ## Code Copy Policy
 
