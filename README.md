@@ -72,7 +72,8 @@ See [CLAUDE.md](CLAUDE.md) for the full development guide.
 ### Branch Workflow
 
 ```
-feat/* ──(squash)──► main ──(auto deploy)──► GitHub Pages
+feat/* ──(squash)──► release/vX.Y.Z ──(merge)──► main ──(auto)──► tag + release + deploy
+fix/*  ──(squash)──►
 ```
 
 ## Related Projects
